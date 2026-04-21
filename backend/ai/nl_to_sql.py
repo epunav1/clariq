@@ -30,7 +30,7 @@ RAW_ORDER_LINE_ITEMS: line_item_id (VARCHAR), order_id (VARCHAR),
 
 def question_to_sql(question: str) -> str:
     message = client.messages.create(
-        model="claude-sonnet-4-6",
+        model="claude-sonnet-4-6-20250514",
         max_tokens=1000,
         messages=[
             {
@@ -80,7 +80,7 @@ def generate_answer(question: str, columns: list, rows: list) -> str:
         data_str += f"... and {len(rows) - 20} more rows\n"
 
     message = client.messages.create(
-        model="claude-sonnet-4-6",
+        model="claude-sonnet-4-6-20250514",
         max_tokens=500,
         messages=[
             {

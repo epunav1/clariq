@@ -6,3 +6,4 @@ python-dotenv==1.2.2
 pydantic==2.12.5
 requests==2.33.1
 ShopifyAPI==12.7.0
+python-multipart==0.0.20
