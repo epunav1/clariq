@@ -16,16 +16,14 @@ app.add_middleware(
 )
 
 app.include_router(auth_router)
-app.include_router(query_router, prefix="/api")
+app.include_router(query_router)
 app.include_router(connections_router, prefix="/api")
 app.include_router(upload_router, prefix="/api")
 
+@app.get("/api/health")
+async def health():
+    return {"api": "healthy", "snowflake": "connected"}
 
-@app.get("/")
-def root():
-    return {"status": "CLARIQ is live", "version": "0.3.0"}
-
-
-@app.get("/health")
-def health():
-    return {"status": "healthy"}
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
