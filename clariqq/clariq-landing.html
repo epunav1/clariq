@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>clariq — Ask your store anything</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect x='2' y='18' width='5' height='12' rx='1' fill='%23635bff'/><rect x='10' y='11' width='5' height='19' rx='1' fill='%23635bff'/><rect x='18' y='4' width='5' height='26' rx='1' fill='%23635bff'/></svg>">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--ink:#0a2540;--ink2:#425466;--ink3:#6b7c93;--line:#e6ebf1;--bg:#fff;--soft:#f6f9fc;--brand:#635bff;--brand2:#5851ec;--navy:#0a2540;--good:#178a5a;--good-s:#e6f4ed;--bad:#c43d3d;--bad-s:#fcebeb}
+body{font-family:-apple-system,BlinkMacSystemFont,"Inter","Segoe UI",sans-serif;color:var(--ink);background:var(--bg);line-height:1.45;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+
+/* ═══ INTRO ═══ */
+.intro{position:fixed;inset:0;background:#fff;z-index:1000;display:flex;align-items:center;justify-content:center;transition:opacity .8s ease}
+.intro.gone{opacity:0;pointer-events:none}
+.intro .bars{display:flex;align-items:flex-end;gap:18px;height:35vh}
+.intro .b{width:44px;background:var(--brand);border-radius:3px;transform:translateY(-100vh);position:relative}
+.intro .b::after{content:"";position:absolute;bottom:-10px;left:50%;transform:translateX(-50%) scaleX(0);width:120%;height:10px;background:radial-gradient(ellipse,rgba(99,91,255,.25) 0%,transparent 70%);border-radius:50%}
+.intro .b1{height:33%;animation:drop .55s cubic-bezier(.5,0,.75,1) .6s forwards,sq .35s ease-out 1.15s}
+.intro .b2{height:66%;animation:drop .55s cubic-bezier(.5,0,.75,1) 1.5s forwards,sq .35s ease-out 2.05s}
+.intro .b3{height:100%;animation:drop .55s cubic-bezier(.5,0,.75,1) 2.4s forwards,sq .35s ease-out 2.95s}
+.intro .b1::after{animation:sh .3s ease-out 1.15s forwards}
+.intro .b2::after{animation:sh .3s ease-out 2.05s forwards}
+.intro .b3::after{animation:sh .3s ease-out 2.95s forwards}
+@keyframes drop{to{transform:translateY(0)}}
+@keyframes sq{0%{transform:translateY(0) scaleY(1) scaleX(1)}30%{transform:translateY(0) scaleY(.88) scaleX(1.08)}60%{transform:translateY(0) scaleY(1.03) scaleX(.98)}100%{transform:translateY(0) scaleY(1) scaleX(1)}}
+@keyframes sh{to{transform:translateX(-50%) scaleX(1)}}
+.intro .wm{position:absolute;left:calc(50% + 80px);top:50%;transform:translateY(-50%);font-size:64px;font-weight:500;letter-spacing:-.035em;color:var(--ink);opacity:0;animation:wmi .8s cubic-bezier(.2,.9,.3,1) 3.4s forwards}
+@keyframes wmi{from{opacity:0;transform:translateY(-50%) translateX(-20px)}to{opacity:1;transform:translateY(-50%) translateX(0)}}
+.intro .tl{position:absolute;left:calc(50% + 80px);top:calc(50% + 50px);font-size:16px;color:var(--ink3);opacity:0;animation:tli .7s ease 4s forwards}
+@keyframes tli{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.intro .skip{position:absolute;top:28px;right:32px;background:rgba(10,37,64,.06);border:1px solid rgba(10,37,64,.1);color:var(--ink2);padding:8px 16px;border-radius:20px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit}
+.intro .skip:hover{background:rgba(10,37,64,.12);color:var(--ink)}
+.intro .prog{position:absolute;bottom:32px;left:50%;transform:translateX(-50%);width:120px;height:3px;background:rgba(10,37,64,.08);border-radius:2px;overflow:hidden}
+.intro .prog::after{content:"";position:absolute;inset:0;background:var(--brand);transform-origin:left;transform:scaleX(0);animation:pr 6s linear forwards}
+@keyframes pr{to{transform:scaleX(1)}}
+
+/* ═══ NAV ═══ */
+.logo-m{display:inline-flex;align-items:center;gap:9px;font-size:22px;font-weight:600;letter-spacing:-.025em}
+.gradient-bg{position:relative;background:#fafbfc;overflow:hidden}
+.gradient-bg::before{content:"";position:absolute;top:-200px;right:-100px;width:900px;height:900px;background:radial-gradient(circle at 30% 40%,#ff8a3d 0%,transparent 35%),radial-gradient(circle at 70% 50%,#e93e7b 0%,transparent 40%),radial-gradient(circle at 50% 70%,#a78bfa 0%,transparent 45%),radial-gradient(circle at 40% 30%,#5cc8ff 0%,transparent 40%);filter:blur(40px);opacity:.85;transform:rotate(-15deg);pointer-events:none}
+nav.n{position:relative;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:22px 40px}
+.nav-links{display:flex;gap:28px;font-size:15px;font-weight:500}
+.nr{display:flex;align-items:center;gap:10px;font-size:14px}
+.btn{display:inline-flex;align-items:center;gap:4px;padding:8px 14px;border-radius:20px;font-weight:500;font-size:14px;cursor:pointer;border:0;transition:all .15s;font-family:inherit}
+.btn-l{background:rgba(255,255,255,.6);color:var(--ink)}
+.btn-p{background:var(--brand);color:#fff}
+.btn-p:hover{background:var(--brand2)}
+.btn-lg{padding:12px 20px;font-size:15px;border-radius:22px}
+.btn-g{background:#fff;color:var(--ink);border:1px solid var(--line);display:inline-flex;align-items:center;gap:8px}
+.gi{width:16px;height:16px;border-radius:50%;background:conic-gradient(from 0deg,#ea4335,#fbbc05,#34a853,#4285f4,#ea4335);display:inline-block}
+.btn-o{border:1px solid var(--line);background:#fff;color:var(--ink)}
+
+/* ═══ HERO ═══ */
+.hero{position:relative;z-index:5;padding:40px 40px 120px}
+.hero-in{max-width:1200px;margin:0 auto}
+.hero h1{font-size:62px;line-height:1.08;letter-spacing:-.025em;font-weight:500;margin:0 0 30px;max-width:820px}
+.hero h1 .dim{color:var(--ink2)}
+.hero .ctas{display:flex;gap:10px;align-items:center}
+.logos-bar{border-top:1px solid var(--line);background:rgba(255,255,255,.5);padding:28px 40px;backdrop-filter:blur(10px);position:relative;z-index:5}
+.logos-bar-in{max-width:1200px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;gap:40px;opacity:.85}
+.logos-bar span{font-family:Georgia,serif;font-size:20px;font-weight:700;color:var(--ink2);letter-spacing:-.015em;white-space:nowrap}
+
+/* ═══ GLOBE ═══ */
+.globe-sec{background:linear-gradient(180deg,#fafbfc 0%,#fff 100%);padding:80px 40px 60px;text-align:center;overflow:hidden}
+.globe-sec .ey{font-size:13px;font-weight:600;color:var(--brand);text-transform:uppercase;letter-spacing:.1em;margin-bottom:14px}
+.globe-sec h2{font-size:44px;font-weight:500;letter-spacing:-.02em;margin:0 0 10px}
+.globe-sec .sub{color:var(--ink2);font-size:17px;max-width:520px;margin:0 auto 30px;line-height:1.5}
+.globe-w{position:relative;width:640px;height:640px;margin:0 auto;cursor:grab}
+.globe-w:active{cursor:grabbing}
+.globe-w canvas{display:block;width:100%;height:100%}
+.globe-stats{display:flex;justify-content:center;gap:50px;margin-top:24px;padding-top:28px;border-top:1px solid var(--line);max-width:700px;margin-left:auto;margin-right:auto}
+.gs .v{font-size:30px;font-weight:500;letter-spacing:-.02em}
+.gs .l{font-size:13px;color:var(--ink3)}
+
+/* ═══ CUSTOMER STORIES ═══ */
+.stories{max-width:1100px;margin:0 auto;padding:80px 28px}
+.stories-intro{display:grid;grid-template-columns:1.2fr 1fr;gap:48px;align-items:center;margin-bottom:60px}
+.stories-intro h2{font-size:40px;font-weight:500;letter-spacing:-.025em;line-height:1.12}
+.stories-intro h2 .dim{color:var(--ink2)}
+.stories-intro .rt{font-size:17px;color:var(--ink2);line-height:1.65}
+.s-head{display:flex;align-items:center;justify-content:space-between;padding:16px 0;margin-bottom:4px}
+.s-head .left{display:flex;align-items:center;gap:14px}
+.s-logo{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#fff;flex-shrink:0}
+.s-head .hl{font-size:18px;font-weight:500;letter-spacing:-.01em}
+.read-l{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius:22px;border:1px solid var(--line);font-size:14px;font-weight:500;color:var(--brand);cursor:pointer;background:#fff;font-family:inherit;flex-shrink:0;transition:all .15s}
+.read-l:hover{border-color:var(--brand);background:#faf9ff}
+.aerial{width:100%;aspect-ratio:16/7;border-radius:14px;overflow:hidden;position:relative}
+.aerial img{width:100%;height:100%;object-fit:cover;display:block}
+.aerial::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(10,37,64,0) 60%,rgba(10,37,64,.15) 100%);pointer-events:none}
+.s-stats{display:flex;gap:60px;padding:22px 0 28px;border-bottom:1px solid var(--line)}
+.s-stats .ss{font-size:15px;color:var(--ink2)}
+.s-stats .ss b{font-size:17px;font-weight:600;color:var(--ink);margin-right:4px}
+.s-row{display:flex;align-items:center;justify-content:space-between;padding:20px 0;border-bottom:1px solid var(--line);cursor:pointer;transition:all .15s}
+.s-row:hover{background:#fafbfc;margin:0 -16px;padding:20px 16px;border-radius:10px}
+.s-row .left{display:flex;align-items:center;gap:14px;flex:1}
+.s-row .hl{font-size:17px;font-weight:500;letter-spacing:-.01em}
+.exp{width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:#fff;display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--ink3);cursor:pointer;flex-shrink:0;transition:all .15s}
+.exp:hover{border-color:var(--brand);color:var(--brand)}
+
+/* ═══ TRUST BAND ═══ */
+.trust{background:var(--navy);color:#fff;padding:80px 40px;text-align:center}
+.trust h2{font-size:32px;font-weight:500;letter-spacing:-.02em;margin:0 0 10px}
+.trust p{color:#8fa3bf;font-size:15px;max-width:480px;margin:0 auto 32px;line-height:1.5}
+.trust-row{display:flex;justify-content:center;gap:60px}
+.ti .tv{font-size:36px;font-weight:400;letter-spacing:-.02em;background:linear-gradient(90deg,#ff8a3d,#e93e7b,#a78bfa);-webkit-background-clip:text;background-clip:text;color:transparent;margin-bottom:4px}
+.ti .tl{font-size:13px;color:#8fa3bf}
+
+/* ═══ PRICING ═══ */
+.pricing{padding:100px 40px}
+.pricing .head{text-align:center;margin-bottom:60px}
+.pricing .head h2{font-size:44px;letter-spacing:-.02em;font-weight:500;margin:0 0 14px}
+.pricing .head p{color:var(--ink2);font-size:17px;max-width:520px;margin:0 auto}
+.price-g{max-width:680px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.pr{background:#fff;border:1px solid var(--line);border-radius:16px;padding:32px 28px;display:flex;flex-direction:column;position:relative}
+.pr.feat{border:2px solid var(--brand);background:linear-gradient(180deg,#faf9ff 0%,#fff 50%);box-shadow:0 20px 40px -20px rgba(99,91,255,.3)}
+.pr-badge{position:absolute;top:-12px;left:28px;background:var(--brand);color:#fff;font-size:11px;font-weight:600;padding:5px 12px;border-radius:20px;letter-spacing:.04em}
+.pr-name{font-size:13px;font-weight:600;color:var(--brand);text-transform:uppercase;letter-spacing:.08em}
+.pr-amt{font-size:42px;font-weight:500;letter-spacing:-.02em;margin:14px 0 2px}
+.pr-amt small{font-size:15px;font-weight:400;color:var(--ink3)}
+.pr-desc{font-size:14px;color:var(--ink2);margin-bottom:24px;min-height:40px}
+.pr ul{list-style:none;padding:0;margin:0 0 28px;font-size:14px;color:var(--ink2)}
+.pr li{padding:7px 0;display:flex;gap:8px;align-items:flex-start}
+.pr li::before{content:"\2713";color:var(--brand);font-weight:700}
+.pr .btn{width:100%;justify-content:center;margin-top:auto}
+
+/* ═══ CTA + FOOTER ═══ */
+.cta-f{padding:80px 40px;text-align:center;border-top:1px solid var(--line)}
+.cta-f h2{font-size:40px;font-weight:500;letter-spacing:-.02em;margin:0 0 14px}
+.cta-f p{color:var(--ink2);margin:0 0 26px;font-size:16px}
+.foot{padding:60px 40px 40px;color:var(--ink3);font-size:13px;display:flex;justify-content:space-between;align-items:center;max-width:1200px;margin:0 auto;border-top:1px solid var(--line)}
+
+@media(max-width:900px){
+  .hero h1{font-size:42px}
+  .nav-links{display:none}
+  .globe-w{width:92vw;height:92vw}
+  .globe-stats,.trust-row{flex-wrap:wrap;gap:24px}
+  .stories-intro{grid-template-columns:1fr;gap:20px}
+  .s-stats{flex-wrap:wrap;gap:20px}
+  .price-g{grid-template-columns:1fr}
+  .s-head{flex-direction:column;align-items:flex-start;gap:12px}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════ INTRO ═══════════════════ -->
+<div class="intro" id="intro">
+  <button class="skip" id="skipBtn">Skip intro</button>
+  <div class="bars"><div class="b b1"></div><div class="b b2"></div><div class="b b3"></div></div>
+  <div class="wm">clariq</div>
+  <div class="tl">ask. answer. act.</div>
+  <div class="prog"></div>
+</div>
+
+<!-- ═══════════════════ HERO ═══════════════════ -->
+<div class="gradient-bg">
+  <nav class="n">
+    <div class="logo-m"><svg width="32" height="32" viewBox="0 0 32 32"><rect x="2" y="18" width="5" height="12" rx="1" fill="#635bff"/><rect x="10" y="11" width="5" height="19" rx="1" fill="#635bff"/><rect x="18" y="4" width="5" height="26" rx="1" fill="#635bff"/></svg> clariq</div>
+    <div class="nav-links"><a>Product</a><a>Pricing</a><a>About</a></div>
+    <div class="nr"><a class="btn btn-l">Sign in</a><a class="btn btn-p">Start free</a></div>
+  </nav>
+  <section class="hero">
+    <div class="hero-in">
+      <h1>Ask your store anything. <span class="dim">Get the answer in plain English — not a spreadsheet.</span></h1>
+      <div class="ctas">
+        <a class="btn btn-p btn-lg">Start with 1,000 free questions</a>
+        <a class="btn btn-g btn-lg"><span class="gi"></span> Sign up with Google</a>
+      </div>
+    </div>
+  </section>
+  <div class="logos-bar"><div class="logos-bar-in">
+    <span>Northwind</span><span>Harbor &amp; Oak</span><span>Kinfolk</span><span>Matterhaus</span><span>Roastery</span><span>Daybreak</span><span>Fieldnote</span>
+  </div></div>
+</div>
+
+<!-- ═══════════════════ GLOBE ═══════════════════ -->
+<section class="globe-sec">
+  <div class="ey">Trusted by merchants in 62 countries</div>
+  <h2>Your data never sleeps.<br>Neither do we.</h2>
+  <div class="sub">Merchants on six continents ask clariq over a million questions a day. Every answer arrives in under 3 seconds.</div>
+  <div class="globe-w" id="globeWrap"><canvas id="globe" width="1280" height="1280"></canvas></div>
+  <div class="globe-stats">
+    <div class="gs"><div class="v">62</div><div class="l">countries</div></div>
+    <div class="gs"><div class="v">4,200+</div><div class="l">merchants</div></div>
+    <div class="gs"><div class="v">1.2M</div><div class="l">questions / day</div></div>
+    <div class="gs"><div class="v">&lt;3s</div><div class="l">avg answer time</div></div>
+  </div>
+</section>
+
+<!-- ═══════════════════ CUSTOMER STORIES ═══════════════════ -->
+<section class="stories">
+  <div class="stories-intro">
+    <h2>Powering stores of all sizes. <span class="dim">Run your business on answers, not dashboards.</span></h2>
+    <div class="rt">From a one-person candle shop doing $800 a month to a 12-store fashion brand doing $8M a year &mdash; they all stopped guessing and started asking clariq.</div>
+  </div>
+
+  <div class="s-head">
+    <div class="left">
+      <div class="s-logo" style="background:#635bff;">S</div>
+      <div class="hl">Sazy's Boutique grew revenue 48% after switching to clariq.</div>
+    </div>
+    <button class="read-l">Read the story &rsaquo;</button>
+  </div>
+
+  <div class="aerial">
+    <img src="pexels-kelly-17291126.jpg" alt="Aerial view of a busy city intersection with cars and pedestrians">
+  </div>
+
+  <div class="s-stats">
+    <div class="ss"><b>3</b> Shopify stores connected</div>
+    <div class="ss"><b>$420K</b> annual revenue tracked</div>
+    <div class="ss"><b>48%</b> revenue growth in 6 months</div>
+    <div class="ss"><b>12 hrs</b> saved per week</div>
+  </div>
+
+  <div class="s-row"><div class="left"><div class="s-logo" style="background:#178a5a;">N</div><div class="hl">Northwind saved 12 hours a week by replacing spreadsheets with clariq.</div></div><button class="exp">+</button></div>
+  <div class="s-row"><div class="left"><div class="s-logo" style="background:#d85a30;">H</div><div class="hl">Harbor &amp; Oak caught a $14,000 inventory problem before it shipped.</div></div><button class="exp">+</button></div>
+  <div class="s-row"><div class="left"><div class="s-logo" style="background:#635bff;">K</div><div class="hl">Kinfolk doubled their reorder rate using clariq's alerts.</div></div><button class="exp">+</button></div>
+  <div class="s-row"><div class="left"><div class="s-logo" style="background:#0a2540;">R</div><div class="hl">Roastery went from &ldquo;I think we're doing okay&rdquo; to knowing exactly.</div></div><button class="exp">+</button></div>
+</section>
+
+<!-- ═══════════════════ TRUST BAND ═══════════════════ -->
+<section class="trust">
+  <h2>Your data stays yours. Always.</h2>
+  <p>Encrypted at rest and in transit. SOC 2 compliant. We never sell your data. Billing powered by Stripe.</p>
+  <div class="trust-row">
+    <div class="ti"><div class="tv">256-bit</div><div class="tl">encryption</div></div>
+    <div class="ti"><div class="tv">99.99%</div><div class="tl">uptime</div></div>
+    <div class="ti"><div class="tv">SOC 2</div><div class="tl">compliant</div></div>
+  </div>
+</section>
+
+<!-- ═══════════════════ PRICING ═══════════════════ -->
+<section class="pricing">
+  <div class="head">
+    <h2>Simple pricing. No surprises.</h2>
+    <p>Start free. Pay only for the questions you actually ask. Cancel anytime.</p>
+  </div>
+  <div class="price-g">
+    <div class="pr">
+      <div class="pr-name">Free</div>
+      <div class="pr-amt">$0<small> /mo</small></div>
+      <div class="pr-desc">Try clariq on one Shopify store.</div>
+      <ul><li>1,000 free questions</li><li>1 connected store</li><li>Email support</li></ul>
+      <a class="btn btn-o">Start free</a>
+    </div>
+    <div class="pr feat">
+      <div class="pr-badge">MOST POPULAR</div>
+      <div class="pr-name">Pay as you go</div>
+      <div class="pr-amt">$0.50<small> /question</small></div>
+      <div class="pr-desc">Only pay when you ask. Billed monthly via Stripe.</div>
+      <ul><li>Unlimited stores</li><li>Usage alerts</li><li>Saved answers and reports</li><li>Priority support</li></ul>
+      <a class="btn btn-p">Get started</a>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ CTA ═══════════════════ -->
+<section class="cta-f">
+  <h2>Ready to know your numbers?</h2>
+  <p>Connect Shopify in 2 minutes. Ask your first question in 3.</p>
+  <div style="display:flex;gap:10px;justify-content:center;">
+    <a class="btn btn-p btn-lg">Start free</a>
+    <a class="btn btn-o btn-lg">Contact sales</a>
+  </div>
+</section>
+
+<!-- ═══════════════════ FOOTER ═══════════════════ -->
+<div class="foot">
+  <div class="logo-m" style="font-size:18px;"><svg width="24" height="24" viewBox="0 0 32 32"><rect x="2" y="18" width="5" height="12" rx="1" fill="#635bff"/><rect x="10" y="11" width="5" height="19" rx="1" fill="#635bff"/><rect x="18" y="4" width="5" height="26" rx="1" fill="#635bff"/></svg> clariq</div>
+  <div>&copy; 2026 clariq, Inc. &middot; Houston, TX</div>
+</div>
+
+<!-- ═══════════════════ SCRIPTS ═══════════════════ -->
+<script>
+/* INTRO */
+(function(){
+  if(sessionStorage.getItem('cq_intro')){document.getElementById('intro').classList.add('gone');return}
+  var audioCtx=null;
+  function playChord(){try{if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)()}catch(e){return}
+  var notes=[{f:261.63,t:1.15},{f:329.63,t:2.05},{f:392,t:2.95}],now=audioCtx.currentTime;
+  notes.forEach(function(n){var o=audioCtx.createOscillator(),g=audioCtx.createGain(),fl=audioCtx.createBiquadFilter();o.type='sine';o.frequency.value=n.f;fl.type='lowpass';fl.frequency.value=2000;g.gain.setValueAtTime(0,now+n.t);g.gain.linearRampToValueAtTime(.15,now+n.t+.02);g.gain.exponentialRampToValueAtTime(.001,now+n.t+1.5);o.connect(fl);fl.connect(g);g.connect(audioCtx.destination);o.start(now+n.t);o.stop(now+n.t+1.6)})}
+  function done(){sessionStorage.setItem('cq_intro','1');document.getElementById('intro').classList.add('gone')}
+  document.getElementById('skipBtn').addEventListener('click',done);
+  setTimeout(function(){try{playChord()}catch(e){}},100);
+  setTimeout(done,6000);
+})();
+
+/* GLOBE */
+(function(){
+  var c=document.getElementById('globe'),w=document.getElementById('globeWrap');if(!c||!w)return;
+  var ctx=c.getContext('2d'),W=c.width,H=c.height,cx=W/2,cy=H/2,R=Math.min(W,H)*.32;
+  var flags=[{n:'United States',f:'\u{1F1FA}\u{1F1F8}',a:0},{n:'Nigeria',f:'\u{1F1F3}\u{1F1EC}',a:Math.PI*.18},{n:'United Kingdom',f:'\u{1F1EC}\u{1F1E7}',a:Math.PI*.33},{n:'Kenya',f:'\u{1F1F0}\u{1F1EA}',a:Math.PI*.5},{n:'Germany',f:'\u{1F1E9}\u{1F1EA}',a:Math.PI*.66},{n:'Japan',f:'\u{1F1EF}\u{1F1F5}',a:Math.PI*.83},{n:'Brazil',f:'\u{1F1E7}\u{1F1F7}',a:Math.PI},{n:'South Africa',f:'\u{1F1FF}\u{1F1E6}',a:Math.PI*1.16},{n:'Canada',f:'\u{1F1E8}\u{1F1E6}',a:Math.PI*1.33},{n:'India',f:'\u{1F1EE}\u{1F1F3}',a:Math.PI*1.5},{n:'Australia',f:'\u{1F1E6}\u{1F1FA}',a:Math.PI*1.66},{n:'France',f:'\u{1F1EB}\u{1F1F7}',a:Math.PI*1.83}];
+  var cities=[[40.71,-74,'New York'],[34.05,-118.24,'Los Angeles'],[51.5,-.12,'London'],[48.85,2.35,'Paris'],[28.61,77.2,'Delhi'],[1.35,103.82,'Singapore'],[35.68,139.69,'Tokyo'],[-33.86,151.2,'Sydney'],[-23.55,-46.63,'São Paulo'],[-1.29,36.82,'Nairobi'],[6.52,3.37,'Lagos'],[-26.2,28.04,'Johannesburg'],[30.04,31.23,'Cairo'],[25.2,55.27,'Dubai'],[37.77,-122.42,'San Francisco'],[39.9,116.4,'Beijing']];
+  var dots=[[60,-130],[55,-110],[50,-100],[45,-90],[40,-80],[35,-100],[30,-90],[25,-100],[45,-120],[35,-120],[30,-85],[0,-65],[-10,-70],[-20,-60],[-30,-65],[-40,-70],[-15,-75],[-5,-60],[50,0],[55,10],[60,20],[45,10],[50,25],[45,20],[40,15],[30,20],[20,10],[10,20],[0,20],[-10,25],[-20,25],[-30,25],[15,35],[5,35],[-5,30],[35,40],[30,50],[45,60],[50,80],[45,100],[40,115],[30,100],[20,90],[25,80],[15,100],[10,105],[5,105],[-5,110],[-10,120],[-25,135],[-30,145],[-35,145],[-20,145],[65,90],[70,60],[70,-100],[65,-150]];
+  function ll(lat,lng,rY,rX){var p=(90-lat)*Math.PI/180,t=(lng+rY)*Math.PI/180,x=R*Math.sin(p)*Math.cos(t),y=R*Math.cos(p),z=R*Math.sin(p)*Math.sin(t),cX=Math.cos(rX),sX=Math.sin(rX);return{x:x,y:y*cX-z*sX,z:y*sX+z*cX}}
+  var tRX=0,tRY=0,rX=0,rY=0,ar=0;
+  w.addEventListener('mousemove',function(e){var r=w.getBoundingClientRect();tRY=((e.clientX-r.left)/r.width-.5)*60;tRX=-((e.clientY-r.top)/r.height-.5)*.4});
+  w.addEventListener('mouseleave',function(){tRY=0;tRX=0});
+  var pings=[];function sp(){var ci=cities[Math.floor(Math.random()*cities.length)];pings.push({lat:ci[0],lng:ci[1],label:ci[2],age:0});if(pings.length>10)pings.shift()}
+  setInterval(sp,700);sp();sp();sp();
+  function draw(){
+    ar+=.1;rY+=(tRY+ar-rY)*.08;rX+=(tRX-rX)*.08;ctx.clearRect(0,0,W,H);
+    var g=ctx.createRadialGradient(cx,cy,R*.3,cx,cy,R*1.5);g.addColorStop(0,'rgba(99,91,255,.1)');g.addColorStop(1,'rgba(99,91,255,0)');ctx.fillStyle=g;ctx.beginPath();ctx.arc(cx,cy,R*1.5,0,Math.PI*2);ctx.fill();
+    var sg=ctx.createRadialGradient(cx-R*.3,cy-R*.3,R*.1,cx,cy,R);sg.addColorStop(0,'#fff');sg.addColorStop(.7,'#fafbfc');sg.addColorStop(1,'#e6ebf1');ctx.fillStyle=sg;ctx.beginPath();ctx.arc(cx,cy,R,0,Math.PI*2);ctx.fill();ctx.strokeStyle='rgba(10,37,64,.08)';ctx.lineWidth=1;ctx.beginPath();ctx.arc(cx,cy,R,0,Math.PI*2);ctx.stroke();
+    ctx.strokeStyle='rgba(99,91,255,.12)';ctx.lineWidth=1;
+    for(var i=0;i<12;i++){ctx.beginPath();var s=false;for(var la=-90;la<=90;la+=3){var p=ll(la,i*30,rY,rX);if(p.z<0){s=false;continue}if(!s){ctx.moveTo(cx+p.x,cy+p.y);s=true}else ctx.lineTo(cx+p.x,cy+p.y)}ctx.stroke()}
+    for(var la=-60;la<=60;la+=20){ctx.beginPath();var s=false;for(var ln=-180;ln<=180;ln+=3){var p=ll(la,ln,rY,rX);if(p.z<0){s=false;continue}if(!s){ctx.moveTo(cx+p.x,cy+p.y);s=true}else ctx.lineTo(cx+p.x,cy+p.y)}ctx.stroke()}
+    for(var i=0;i<dots.length;i++){var d=dots[i],p=ll(d[0],d[1],rY,rX);if(p.z<0)continue;var sz=2+(p.z/R)*1.8,al=.25+(p.z/R)*.4;ctx.fillStyle='rgba(99,91,255,'+al+')';ctx.beginPath();ctx.arc(cx+p.x,cy+p.y,sz,0,Math.PI*2);ctx.fill()}
+    for(var i=0;i<pings.length;i++){var pi=pings[i];pi.age+=.018;if(pi.age>1)pi.age=1;var p=ll(pi.lat,pi.lng,rY,rX);if(p.z<0)continue;var x=cx+p.x,y=cy+p.y;ctx.strokeStyle='rgba(233,62,123,'+(1-pi.age)*.8+')';ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(x,y,pi.age*50,0,Math.PI*2);ctx.stroke();ctx.fillStyle='#e93e7b';ctx.beginPath();ctx.arc(x,y,5,0,Math.PI*2);ctx.fill();ctx.fillStyle='rgba(233,62,123,.3)';ctx.beginPath();ctx.arc(x,y,11,0,Math.PI*2);ctx.fill();if(pi.age<.6){ctx.font='500 24px -apple-system,Inter,sans-serif';ctx.fillStyle='rgba(10,37,64,'+(1-pi.age*1.5)+')';ctx.fillText(pi.label,x+16,y-10)}}
+    for(var i=pings.length-1;i>=0;i--)if(pings[i].age>=1)pings.splice(i,1);
+    var oR=R*1.38,oT=Date.now()*.00018;
+    for(var fi=0;fi<flags.length;fi++){var f=flags[fi],a=f.a+oT,ox=oR*Math.cos(a),oy=0,oz=oR*Math.sin(a),c2=Math.cos(rX*.7),s2=Math.sin(rX*.7),oy2=oy*c2-oz*s2,oz2=oy*s2+oz*c2,bt=-.22,cB=Math.cos(bt),sB=Math.sin(bt),oy3=oy2*cB-oz2*sB,oz3=oy2*sB+oz2*cB;
+    var x=cx+ox,y=cy+oy3,z=oz3,sc=.7+(z+oR)/(oR*2)*.6,al=.4+(z+oR)/(oR*2)*.6,sz=44*sc;
+    ctx.globalAlpha=al;ctx.fillStyle='#fff';ctx.strokeStyle='rgba(10,37,64,.12)';ctx.lineWidth=1;var cW=sz*2.8,cH=sz*1.15,cX=x-cW/2,cY=y-cH/2,rr=cH/2;ctx.beginPath();ctx.moveTo(cX+rr,cY);ctx.lineTo(cX+cW-rr,cY);ctx.arcTo(cX+cW,cY,cX+cW,cY+rr,rr);ctx.lineTo(cX+cW,cY+cH-rr);ctx.arcTo(cX+cW,cY+cH,cX+cW-rr,cY+cH,rr);ctx.lineTo(cX+rr,cY+cH);ctx.arcTo(cX,cY+cH,cX,cY+cH-rr,rr);ctx.lineTo(cX,cY+rr);ctx.arcTo(cX,cY,cX+rr,cY,rr);ctx.closePath();ctx.fill();ctx.stroke();
+    ctx.font=sz*.85+'px -apple-system,"Apple Color Emoji","Segoe UI Emoji",sans-serif';ctx.textBaseline='middle';ctx.fillText(f.f,cX+12,y);
+    ctx.font='500 '+sz*.38+'px -apple-system,Inter,sans-serif';ctx.fillStyle='rgba(10,37,64,'+al+')';ctx.fillText(f.n,cX+sz*1.15,y);ctx.globalAlpha=1}
+    requestAnimationFrame(draw)}
+  draw();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>clariq</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect x='2' y='18' width='5' height='12' rx='1' fill='%23635bff'/><rect x='10' y='11' width='5' height='19' rx='1' fill='%23635bff'/><rect x='18' y='4' width='5' height='26' rx='1' fill='%23635bff'/></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--ink:#0a2540;--ink2:#425466;--ink3:#8792a2;--line:#e3e8ee;--bg:#fff;--alt:#f6f9fc;--brand:#635bff;--bsoft:#f0eeff;--bhov:#5851ec;--good:#0cad55;--gbg:#e8faf0;--gtx:#05783c;--bad:#cd3d3d;--bbg:#fef2f2;--btx:#9a2a2a;--warn:#d97706;--wbg:#fffbeb;--sh:0 2px 5px -1px rgba(50,50,93,.08),0 1px 3px -1px rgba(0,0,0,.04);--r:10px}
+body{font-family:"Inter",-apple-system,sans-serif;background:var(--bg);color:var(--ink);display:flex;min-height:100vh;font-size:14px;-webkit-font-smoothing:antialiased}
+
+.toast{position:fixed;top:20px;right:20px;background:var(--ink);color:#fff;padding:12px 20px 12px 16px;border-radius:8px;font-size:13px;font-weight:500;z-index:999;transform:translateY(-20px);opacity:0;transition:all .3s;pointer-events:none;display:flex;align-items:center;gap:10px;box-shadow:0 8px 20px rgba(0,0,0,.2);max-width:380px}
+.toast.show{transform:translateY(0);opacity:1;pointer-events:auto}
+.toast.success{background:var(--good)}.toast.error{background:var(--bad)}
+.toast .t-icon{font-size:16px;flex-shrink:0}
+.toast .t-close{margin-left:auto;cursor:pointer;opacity:.7;font-size:16px;flex-shrink:0}
+.toast .t-close:hover{opacity:1}
+.toast .t-undo{background:rgba(255,255,255,.2);color:#fff;border:1px solid rgba(255,255,255,.4);padding:3px 10px;border-radius:5px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;margin-left:8px;flex-shrink:0;text-transform:uppercase;letter-spacing:.03em}
+.toast .t-undo:hover{background:rgba(255,255,255,.35)}
+
+.modal-overlay{position:fixed;inset:0;background:rgba(10,37,64,.45);z-index:100;display:none;align-items:center;justify-content:center;backdrop-filter:blur(2px)}
+.modal-overlay.show{display:flex}
+.modal{background:var(--bg);border-radius:12px;padding:28px;width:440px;box-shadow:0 20px 40px rgba(0,0,0,.15);max-height:90vh;overflow-y:auto}
+.modal h3{font-size:16px;font-weight:600;margin-bottom:4px}
+.modal .msub{font-size:12px;color:var(--ink3);margin-bottom:18px}
+.modal label{font-size:11px;font-weight:600;color:var(--ink2);display:block;margin-bottom:4px}
+.modal input,.modal select,.modal textarea{width:100%;padding:8px 12px;border:1px solid var(--line);border-radius:6px;font-size:13px;font-family:inherit;outline:0;background:var(--bg);color:var(--ink);margin-bottom:12px}
+.modal input:focus,.modal select:focus{border-color:var(--brand);box-shadow:0 0 0 3px var(--bsoft)}
+.modal-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:6px}
+.mbtn{padding:8px 16px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;border:0;transition:all .1s}
+.mbtn.cancel{background:var(--alt);color:var(--ink2);border:1px solid var(--line)}.mbtn.cancel:hover{background:var(--line)}
+.mbtn.primary{background:var(--brand);color:#fff}.mbtn.primary:hover{background:var(--bhov)}
+.mbtn.danger{background:var(--bad);color:#fff}.mbtn.danger:hover{background:#b91c1c}
+.mbtn:disabled{opacity:.5;cursor:not-allowed}
+
+.side{width:232px;background:var(--bg);border-right:1px solid var(--line);display:flex;flex-direction:column;position:fixed;top:0;bottom:0;left:0;z-index:20}
+.s-head{padding:22px 18px 14px}
+.s-logo{display:flex;align-items:center;gap:8px;font-size:17px;font-weight:700;letter-spacing:-.03em;margin-bottom:16px;cursor:pointer}
+.s-sw{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--alt);border:1px solid var(--line);border-radius:8px;cursor:pointer}
+.s-sw:hover{border-color:var(--brand)}
+.s-sw .dt{width:24px;height:24px;border-radius:6px;background:#5aa64c;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:600}
+.s-sw .nm{font-size:12px;font-weight:600}.s-sw .sb{font-size:10px;color:var(--ink3)}
+.s-nav{flex:1;overflow-y:auto;padding:4px 0}
+.ns{font-size:9px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.12em;padding:16px 18px 4px}
+.ni{display:flex;align-items:center;gap:9px;padding:7px 18px;font-size:13px;color:var(--ink2);cursor:pointer;border-left:2.5px solid transparent;transition:all .08s;user-select:none}
+.ni:hover{color:var(--brand);background:var(--bsoft)}
+.ni.on{color:var(--brand);font-weight:600;border-left-color:var(--brand);background:var(--bsoft)}
+.ni .badge{margin-left:auto;background:var(--bad);color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:8px;min-width:16px;text-align:center}
+.s-foot{padding:10px 12px;border-top:1px solid var(--line)}
+.s-conn{padding:8px 10px;background:var(--alt);border-radius:7px;margin-bottom:6px}
+.s-conn .cl{font-size:9px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
+.s-conn .cr{display:flex;align-items:center;gap:4px;padding:2px 0;font-size:10px;color:var(--ink2)}
+.cd{width:5px;height:5px;border-radius:50%;background:var(--good)}
+.s-plan{display:flex;justify-content:space-between;padding:8px 10px;background:var(--brand);border-radius:7px;color:#fff;font-size:11px;font-weight:500;cursor:pointer}
+.s-plan:hover{background:var(--bhov)}
+.s-plan b{font-weight:700}
+
+.main{margin-left:232px;flex:1;display:flex;flex-direction:column}
+.topbar{display:flex;align-items:center;gap:10px;padding:12px 24px;background:var(--bg);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:10}
+.ask-bar{flex:1;display:flex;align-items:center;gap:6px;background:var(--alt);border:1px solid var(--line);border-radius:8px;padding:8px 12px}
+.ask-bar:focus-within{border-color:var(--brand);background:var(--bg);box-shadow:0 0 0 3px var(--bsoft)}
+.ask-bar .pr{color:var(--brand);font-weight:700;font-size:15px}
+.ask-bar input{flex:1;border:0;background:transparent;outline:0;font-size:13px;color:var(--ink);font-family:inherit}
+.ask-bar input::placeholder{color:var(--ink3)}
+.ask-bar .kbd{font-size:9px;color:var(--ink3);background:var(--bg);border:1px solid var(--line);padding:1px 4px;border-radius:3px;font-family:ui-monospace,monospace}
+.tb-btn{padding:6px 11px;border-radius:6px;font-size:12px;color:var(--ink2);border:1px solid var(--line);background:var(--bg);cursor:pointer;font-family:inherit;font-weight:500}
+.tb-btn:hover{border-color:var(--brand);color:var(--brand)}
+.av{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#d85a30,#e8845a);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;cursor:pointer}
+
+.page{padding:24px;display:none}.page.active{display:block}
+.pt{font-size:18px;font-weight:600;letter-spacing:-.01em;margin-bottom:4px}
+.ps{font-size:12px;color:var(--ink3);margin-bottom:20px}
+
+.money{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px}
+.mc{background:var(--alt);border-radius:var(--r);padding:14px;cursor:pointer;transition:all .1s}
+.mc:hover{background:var(--bsoft);transform:translateY(-1px)}
+.mc .ml{font-size:11px;color:var(--ink3);margin-bottom:6px}
+.mc .mv{font-size:24px;font-weight:700;letter-spacing:-.02em;line-height:1;margin-bottom:6px}
+.mc .md{font-size:10px;font-weight:600;padding:2px 6px;border-radius:var(--r);display:inline-block}
+.md.up{color:var(--gtx);background:var(--gbg)}.md.dn{color:var(--btx);background:var(--bbg)}
+
+.prods{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px}
+.pp{background:var(--bg);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;box-shadow:var(--sh)}
+.pp-h{padding:10px 14px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between}
+.pp-h .tt{font-size:12px;font-weight:600;display:flex;align-items:center;gap:6px}
+.tg{font-size:9px;font-weight:700;padding:2px 6px;border-radius:var(--r);text-transform:uppercase}
+.tg.g{background:var(--gbg);color:var(--gtx)}.tg.b{background:var(--bbg);color:var(--btx)}
+.pp-h .see{font-size:10px;color:var(--brand);font-weight:600;cursor:pointer}
+.pr{display:flex;align-items:center;gap:8px;padding:8px 14px;border-bottom:1px solid var(--line);transition:background .06s;cursor:pointer}
+.pr:last-child{border-bottom:0}.pr:hover{background:var(--alt)}
+.tm{width:32px;height:32px;border-radius:7px;background:var(--alt);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--ink2);flex-shrink:0}
+.inf{flex:1;min-width:0}.inf .n{font-size:12px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.inf .s{font-size:10px;color:var(--ink3)}
+.vl{text-align:right;flex-shrink:0;margin-right:4px}.vl .v{font-size:12px;font-weight:700}.vl .d{font-size:10px;font-weight:600}
+.vl .d.up{color:var(--good)}.vl .d.dn{color:var(--bad)}
+.act{padding:4px 9px;border-radius:6px;font-size:9px;font-weight:700;border:0;cursor:pointer;font-family:inherit;flex-shrink:0;text-transform:uppercase;letter-spacing:.02em;transition:all .08s}
+.act:disabled{opacity:.6;cursor:not-allowed}
+.act.re{background:var(--gbg);color:var(--gtx)}.act.re:hover:not(:disabled){background:var(--good);color:#fff}
+.act.di{background:var(--bbg);color:var(--btx)}.act.di:hover:not(:disabled){background:var(--bad);color:#fff}
+.act.done{background:var(--good)!important;color:#fff!important;cursor:default}
+
+.btm{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pnl{background:var(--bg);border:1px solid var(--line);border-radius:var(--r);padding:16px;box-shadow:var(--sh)}
+.pnl-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.pnl-h h3{font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px}
+.pnl-h .bg{background:var(--bad);color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:8px;min-width:16px;text-align:center;transition:all .2s}
+.pnl-h .bg.clear{background:var(--good)}
+
+.iss{padding:10px 12px;margin-bottom:6px;background:var(--alt);border-radius:7px;border-left:2.5px solid transparent;display:flex;align-items:center;gap:8px;transition:all .3s ease;overflow:hidden}
+.iss:last-child{margin-bottom:0}.iss.u{border-left-color:var(--bad)}.iss.w{border-left-color:var(--warn)}
+.idot{width:6px;height:6px;border-radius:50%;flex-shrink:0}.idot.bad{background:var(--bad)}.idot.wrn{background:var(--warn)}
+.itx{flex:1}.itx .it{font-size:11px;font-weight:600}.itx .ix{font-size:10px;color:var(--ink3)}
+.ib{padding:5px 10px;border-radius:6px;font-size:9px;font-weight:700;border:0;cursor:pointer;font-family:inherit;flex-shrink:0;text-transform:uppercase;letter-spacing:.02em;transition:all .1s}
+.ib:disabled{opacity:.5;cursor:not-allowed}
+.ib.u{background:var(--brand);color:#fff}.ib.u:hover:not(:disabled){background:var(--bhov)}
+.ib.w{background:var(--ink);color:#fff}.ib.w:hover:not(:disabled){background:#1a2d4a}
+.chart-box{height:170px}.chart-box canvas{width:100%!important;height:100%!important}
+
+.all-clear{text-align:center;padding:40px 20px;font-size:13px;font-weight:600;color:var(--good);display:flex;flex-direction:column;align-items:center;gap:6px}
+.all-clear .check{width:36px;height:36px;border-radius:50%;background:var(--gbg);display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:4px}
+
+.ask-page{display:flex;flex-direction:column;height:calc(100vh - 52px)}
+.ask-msgs{flex:1;overflow-y:auto;padding:20px 0}
+.msg{max-width:80%;margin-bottom:14px;padding:0 24px}
+.msg.user{margin-left:auto}
+.msg.user .bubble{background:var(--brand);color:#fff;border-radius:14px 14px 4px 14px;padding:10px 14px;font-size:13px;line-height:1.5}
+.msg.bot .bubble{background:var(--alt);border:1px solid var(--line);border-radius:14px 14px 14px 4px;padding:12px 16px;font-size:13px;line-height:1.6}
+.msg .meta{font-size:10px;color:var(--ink3);margin-top:4px;padding:0 4px}
+.typing .bubble::after{content:'...';animation:blink 1s infinite}
+@keyframes blink{0%,100%{opacity:.3}50%{opacity:1}}
+.ask-chips{display:flex;gap:6px;padding:0 24px 12px;flex-wrap:wrap}
+.chip{padding:6px 12px;border-radius:20px;font-size:11px;background:var(--alt);border:1px solid var(--line);color:var(--ink2);cursor:pointer;font-family:inherit;font-weight:500;transition:all .1s}
+.chip:hover{border-color:var(--brand);color:var(--brand);background:var(--bsoft)}
+.ask-input{border-top:1px solid var(--line);padding:14px 24px;display:flex;gap:8px;background:var(--bg)}
+.ask-input input{flex:1;border:1px solid var(--line);border-radius:8px;padding:10px 14px;font-size:13px;font-family:inherit;outline:0;background:var(--bg);color:var(--ink)}
+.ask-input input:focus{border-color:var(--brand);box-shadow:0 0 0 3px var(--bsoft)}
+.ask-input button{padding:10px 18px;border-radius:8px;background:var(--brand);color:#fff;border:0;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit}
+.ask-input button:hover{background:var(--bhov)}
+
+.tbl{width:100%;border-collapse:collapse;font-size:12px}
+.tbl th{text-align:left;font-size:10px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.06em;padding:8px 12px;border-bottom:1px solid var(--line);background:var(--alt);cursor:pointer;user-select:none}
+.tbl th:hover{color:var(--brand)}
+.tbl td{padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:middle}
+.tbl tbody tr{cursor:pointer;transition:background .06s}.tbl tbody tr:hover td{background:var(--alt)}
+.status{font-size:10px;font-weight:600;padding:2px 8px;border-radius:var(--r);display:inline-block}
+.status.live{background:var(--gbg);color:var(--gtx)}.status.off{background:var(--alt);color:var(--ink3)}
+
+.sg{background:var(--bg);border:1px solid var(--line);border-radius:var(--r);margin-bottom:14px;box-shadow:var(--sh)}
+.sg-h{padding:14px 18px;border-bottom:1px solid var(--line);font-size:13px;font-weight:600}
+.sg-r{display:flex;justify-content:space-between;align-items:center;padding:12px 18px;border-bottom:1px solid var(--line)}
+.sg-r:last-child{border-bottom:0}
+.sg-r .sl{font-size:12px;color:var(--ink2)}.sg-r .sv{font-size:12px;font-weight:600;display:flex;align-items:center;gap:6px}
+.sg-btn{padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;border:1px solid var(--line);background:var(--bg);color:var(--ink2);cursor:pointer;font-family:inherit}
+.sg-btn:hover{border-color:var(--brand);color:var(--brand)}
+.sg-edit{border:1px solid var(--brand)!important;border-radius:6px;padding:4px 8px;font-size:12px;font-family:inherit;outline:0;background:var(--bsoft)!important;margin-bottom:0!important}
+.toggle-sw{width:36px;height:20px;border-radius:10px;border:0;cursor:pointer;position:relative;transition:all .2s}
+.toggle-sw.on{background:var(--good)}.toggle-sw.off{background:var(--line)}
+.toggle-sw::after{content:"";position:absolute;top:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:all .2s}
+.toggle-sw.on::after{left:18px}.toggle-sw.off::after{left:2px}
+
+.plan-card{background:linear-gradient(135deg,var(--brand),#8b83ff);border-radius:var(--r);padding:24px;color:#fff;margin-bottom:18px;display:flex;justify-content:space-between;align-items:center}
+.plan-card .pn{font-size:24px;font-weight:700}.plan-card .pp{font-size:14px;opacity:.8;margin-top:4px}
+.plan-btn{padding:8px 18px;border-radius:8px;background:rgba(255,255,255,.2);color:#fff;border:1px solid rgba(255,255,255,.3);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit}
+.plan-btn:hover{background:rgba(255,255,255,.35)}
+
+.conn-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;margin-bottom:24px}
+.cc{display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--bg);border:1px solid var(--line);border-radius:var(--r);cursor:pointer;transition:all .1s}
+.cc:hover{border-color:var(--brand);box-shadow:var(--sh)}
+.cc-i{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0}
+.cc-inf{flex:1;min-width:0}.cc-n{font-size:12px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.cc-rg{font-size:9px;color:var(--ink3)}
+.cc-st{font-size:9px;font-weight:700;flex-shrink:0;text-transform:uppercase}.cc-st.on{color:var(--good)}
+.cc-add{font-size:10px;font-weight:700;color:var(--brand);flex-shrink:0;padding:3px 8px;border-radius:6px;background:var(--bsoft)}
+.cc:hover .cc-add{background:var(--brand);color:#fff}
+.dashed-add{background:var(--alt);border:1.5px dashed var(--line);border-radius:var(--r);padding:24px;text-align:center;cursor:pointer;transition:all .12s}
+.dashed-add:hover{border-color:var(--brand);background:var(--bsoft)}
+
+.sec-label{font-size:11px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px}
+
+@media(max-width:900px){.side{display:none}.main{margin-left:0}.money{grid-template-columns:repeat(2,1fr)}.prods,.btm{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast"><span class="t-icon"></span><span class="t-msg"></span><span class="t-close" onclick="hideToast()">&times;</span></div>
+<div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeModal()"><div class="modal" id="modalContent"></div></div>
+
+<aside class="side">
+<div class="s-head">
+<div class="s-logo" onclick="go('home')"><svg width="20" height="20" viewBox="0 0 32 32"><rect x="2" y="18" width="5" height="12" rx="1" fill="#635bff"/><rect x="10" y="11" width="5" height="19" rx="1" fill="#635bff"/><rect x="18" y="4" width="5" height="26" rx="1" fill="#635bff"/></svg> clariq</div>
+<div class="s-sw" onclick="showModal('switchStore')"><div class="dt">S</div><div><div class="nm">Punsky's Boutique</div><div class="sb">3 stores connected</div></div></div>
+</div>
+<div class="s-nav">
+<div class="ns">Menu</div>
+<div class="ni on" data-page="home" onclick="go('home')">Home</div>
+<div class="ni" data-page="ask" onclick="go('ask')">Ask clariq</div>
+<div class="ni" data-page="issues" onclick="go('issues')">Issues <span class="badge" id="issueBadge">5</span></div>
+<div class="ni" data-page="products" onclick="go('products')">Products</div>
+<div class="ni" data-page="customers" onclick="go('customers')">Customers</div>
+<div class="ni" data-page="reports" onclick="go('reports')">Reports</div>
+<div class="ns">Account</div>
+<div class="ni" data-page="connections" onclick="go('connections')">Connections</div>
+<div class="ni" data-page="billing" onclick="go('billing')">Billing</div>
+<div class="ni" data-page="settings" onclick="go('settings')">Settings</div>
+</div>
+<div class="s-foot">
+<div class="s-conn"><div class="cl">Connected</div><div class="cr"><span class="cd"></span> Shopify</div><div class="cr"><span class="cd"></span> Amazon</div><div class="cr"><span class="cd"></span> TikTok</div></div>
+<div class="s-plan" onclick="go('billing')"><span>Pro plan</span><b>$99/mo</b></div>
+</div>
+</aside>
+
+<section class="main">
+<div class="topbar">
+<div class="ask-bar"><span class="pr">&rsaquo;</span><input placeholder="Ask clariq anything..." id="globalAsk" onkeydown="if(event.key==='Enter'){go('ask');setTimeout(function(){document.getElementById('askInput').value=document.getElementById('globalAsk').value;document.getElementById('globalAsk').value='';sendMsg()},150)}"/><span class="kbd">&#8984;K</span></div>
+<button class="tb-btn" onclick="toast('Report exported as PDF','success')">Export</button>
+<div class="av" onclick="go('settings')">V</div>
+</div>
+
+<!-- HOME -->
+<div class="page active" id="pg-home">
+<div class="pt">Evening, Victor</div>
+<div class="ps">Here's what happened across your stores today.</div>
+<div class="money">
+<div class="mc" onclick="showModal('metric','revenue')"><div class="ml">You made</div><div class="mv">$48,210</div><div class="md up">+23%</div></div>
+<div class="mc" onclick="showModal('metric','orders')"><div class="ml">Orders</div><div class="mv">1,284</div><div class="md up">+12%</div></div>
+<div class="mc" onclick="showModal('metric','avg')"><div class="ml">Avg order</div><div class="mv">$37.54</div><div class="md up">+4%</div></div>
+<div class="mc" onclick="showModal('metric','returns')"><div class="ml">Returns</div><div class="mv">3.2%</div><div class="md up">-0.4pt</div></div>
+</div>
+<div class="prods">
+<div class="pp"><div class="pp-h"><div class="tt">Your winners <span class="tg g">Selling fast</span></div><span class="see" onclick="go('products')">View all &rarr;</span></div>
+<div class="pr" onclick="showModal('product','Linen Shirt','Shopify','$12,480','312','12')"><div class="tm">LS</div><div class="inf"><div class="n">Linen Shirt</div><div class="s">Shopify &middot; 12 left &middot; 8/day</div></div><div class="vl"><div class="v">$12,480</div><div class="d up">+48%</div></div><button class="act re" onclick="event.stopPropagation();doAction(this,'Reorder placed for Linen Shirt')">Reorder</button></div>
+<div class="pr" onclick="showModal('product','Wool Throw','Amazon','$8,920','178','34')"><div class="tm">WT</div><div class="inf"><div class="n">Wool Throw</div><div class="s">Amazon &middot; 34 in stock</div></div><div class="vl"><div class="v">$8,920</div><div class="d up">+32%</div></div><button class="act re" onclick="event.stopPropagation();doAction(this,'Reorder placed for Wool Throw')">Reorder</button></div>
+<div class="pr" onclick="showModal('product','Kettle Pro','TikTok','$6,340','127','56')"><div class="tm">KP</div><div class="inf"><div class="n">Kettle Pro</div><div class="s">TikTok &middot; 56 in stock</div></div><div class="vl"><div class="v">$6,340</div><div class="d up">+21%</div></div><button class="act re" onclick="event.stopPropagation();doAction(this,'Reorder placed for Kettle Pro')">Reorder</button></div></div>
+<div class="pp"><div class="pp-h"><div class="tt">Not doing well <span class="tg b">Stuck</span></div><span class="see" onclick="go('products')">View all &rarr;</span></div>
+<div class="pr" onclick="showModal('product','Silk Pillowcase','Shopify','$380','6','142')"><div class="tm">SP</div><div class="inf"><div class="n">Silk Pillowcase</div><div class="s">Shopify &middot; 142 sitting</div></div><div class="vl"><div class="v">$380</div><div class="d dn">-67%</div></div><button class="act di" onclick="event.stopPropagation();doAction(this,'20% off activated for Silk Pillowcase')">20% off</button></div>
+<div class="pr" onclick="showModal('product','Canvas Backpack','Amazon','$612','12','88')"><div class="tm">CB</div><div class="inf"><div class="n">Canvas Backpack</div><div class="s">Amazon &middot; 88 sitting</div></div><div class="vl"><div class="v">$612</div><div class="d dn">-41%</div></div><button class="act di" onclick="event.stopPropagation();doAction(this,'Discount activated for Canvas Backpack')">Discount</button></div>
+<div class="pr" onclick="showModal('product','Bamboo Board','TikTok','$290','8','61')"><div class="tm">BC</div><div class="inf"><div class="n">Bamboo Board</div><div class="s">TikTok &middot; 61 sitting</div></div><div class="vl"><div class="v">$290</div><div class="d dn">-28%</div></div><button class="act di" onclick="event.stopPropagation();doAction(this,'Discount activated for Bamboo Board')">Discount</button></div></div>
+</div>
+<div class="btm">
+<div class="pnl" id="homeIssues"><div class="pnl-h"><h3>Issues to fix <span class="bg" id="homeIssueCount">5</span></h3><span style="font-size:10px;color:var(--brand);cursor:pointer" onclick="go('issues')">View all &rarr;</span></div>
+<div class="iss u" data-issue="1"><span class="idot bad"></span><div class="itx"><div class="it">Linen Shirt almost sold out</div><div class="ix">12 left. Out in 36hrs.</div></div><button class="ib u" onclick="fixIssue(1,'Reorder placed for 200 Linen Shirts')">Reorder 200</button></div>
+<div class="iss w" data-issue="2"><span class="idot wrn"></span><div class="itx"><div class="it">47 customers inactive 60 days</div><div class="ix">Could recover $16K.</div></div><button class="ib w" onclick="fixIssue(2,'Win-back emails sent to 47 customers')">Win-back</button></div>
+<div class="iss w" data-issue="3"><span class="idot wrn"></span><div class="itx"><div class="it">Silk Pillowcase tying up $2,800</div><div class="ix">142 sitting. Sold 6.</div></div><button class="ib w" onclick="fixIssue(3,'20% promotion activated')">Run promo</button></div></div>
+<div class="pnl"><div class="pnl-h"><h3>Revenue &middot; all stores</h3></div><div class="chart-box"><canvas id="rvChart"></canvas></div></div>
+</div>
+</div>
+
+<!-- ASK -->
+<div class="page" id="pg-ask">
+<div class="ask-page">
+<div class="ask-msgs" id="askMsgs"><div class="msg bot"><div class="bubble">Hi Victor! Ask me anything about your stores &mdash; revenue, products, customers, trends.</div><div class="meta">clariq &middot; just now</div></div></div>
+<div class="ask-chips" id="askChips">
+<div class="chip" onclick="askQ('What was my total revenue this month?')">Total revenue this month</div>
+<div class="chip" onclick="askQ('Which products are selling the fastest?')">Fastest selling products</div>
+<div class="chip" onclick="askQ('Compare Shopify vs Amazon performance')">Shopify vs Amazon</div>
+<div class="chip" onclick="askQ('Who are my top customers?')">Top customers</div>
+</div>
+<div class="ask-input"><input id="askInput" placeholder="Ask a question..." onkeydown="if(event.key==='Enter')sendMsg()"/><button onclick="sendMsg()">Ask</button></div>
+</div>
+</div>
+
+<!-- ISSUES -->
+<div class="page" id="pg-issues">
+<div class="pt">Issues</div>
+<div class="ps">Problems that need your attention. One click to fix each one.</div>
+<div id="issuesList">
+<div class="iss u" data-issue="1" style="margin-bottom:10px"><span class="idot bad"></span><div class="itx"><div class="it">Linen Shirt almost sold out</div><div class="ix">12 left on Shopify. Selling 8/day. Out in 36 hours.</div></div><button class="ib u" onclick="fixIssue(1,'Reorder placed for 200 Linen Shirts')">Reorder 200</button></div>
+<div class="iss w" data-issue="2" style="margin-bottom:10px"><span class="idot wrn"></span><div class="itx"><div class="it">47 customers inactive for 60 days</div><div class="ix">Avg LTV: $340. One email could recover $16K.</div></div><button class="ib w" onclick="fixIssue(2,'Win-back emails sent to 47 customers')">Send win-back</button></div>
+<div class="iss w" data-issue="3" style="margin-bottom:10px"><span class="idot wrn"></span><div class="itx"><div class="it">Silk Pillowcase tying up $2,800</div><div class="ix">142 units sitting. Sold 6 this month.</div></div><button class="ib w" onclick="fixIssue(3,'20% promotion activated')">Run 20% promo</button></div>
+<div class="iss w" data-issue="4" style="margin-bottom:10px"><span class="idot wrn"></span><div class="itx"><div class="it">Amazon return rate 2.3x higher than Shopify</div><div class="ix">Check listings for sizing or photo issues.</div></div><button class="ib w" onclick="fixIssue(4,'Amazon listings flagged for review')">Review listings</button></div>
+<div class="iss w" data-issue="5" style="margin-bottom:10px"><span class="idot wrn"></span><div class="itx"><div class="it">TikTok Ship avg 4.2 days vs 2-day target</div><div class="ix">Check fulfillment logistics.</div></div><button class="ib w" onclick="fixIssue(5,'Logistics team notified')">Check logistics</button></div>
+</div>
+</div>
+
+<!-- PRODUCTS -->
+<div class="page" id="pg-products">
+<div class="pt">Products</div>
+<div class="ps">All products across Shopify, Amazon, and TikTok Shop. Click any row for details.</div>
+<table class="tbl"><thead><tr><th onclick="toast('Sorted by product name')">Product</th><th onclick="toast('Sorted by platform')">Platform</th><th onclick="toast('Sorted by revenue')">Revenue</th><th onclick="toast('Sorted by units sold')">Sold</th><th onclick="toast('Sorted by stock')">Stock</th><th>Trend</th><th>Action</th></tr></thead>
+<tbody>
+<tr onclick="showModal('product','Linen Shirt','Shopify','$12,480','312','12')"><td><b>Linen Shirt</b></td><td>Shopify</td><td>$12,480</td><td>312</td><td style="color:var(--bad);font-weight:600">12</td><td><span class="md up">+48%</span></td><td><button class="act re" onclick="event.stopPropagation();doAction(this,'Reorder placed')">Reorder</button></td></tr>
+<tr onclick="showModal('product','Wool Throw','Amazon','$8,920','178','34')"><td><b>Wool Throw</b></td><td>Amazon</td><td>$8,920</td><td>178</td><td>34</td><td><span class="md up">+32%</span></td><td><button class="act re" onclick="event.stopPropagation();doAction(this,'Reorder placed')">Reorder</button></td></tr>
+<tr onclick="showModal('product','Kettle Pro','TikTok','$6,340','127','56')"><td><b>Kettle Pro</b></td><td>TikTok</td><td>$6,340</td><td>127</td><td>56</td><td><span class="md up">+21%</span></td><td><button class="act re" onclick="event.stopPropagation();doAction(this,'Reorder placed')">Reorder</button></td></tr>
+<tr onclick="showModal('product','Ceramic Mug','Shopify','$4,120','206','89')"><td><b>Ceramic Mug Set</b></td><td>Shopify</td><td>$4,120</td><td>206</td><td>89</td><td><span class="md up">+15%</span></td><td><button class="act re" onclick="event.stopPropagation();doAction(this,'Reorder placed')">Reorder</button></td></tr>
+<tr onclick="showModal('product','Leather Belt','Amazon','$2,840','71','42')"><td><b>Leather Belt</b></td><td>Amazon</td><td>$2,840</td><td>71</td><td>42</td><td><span class="md up">+8%</span></td><td><button class="act re" onclick="event.stopPropagation();doAction(this,'Reorder placed')">Reorder</button></td></tr>
+<tr onclick="showModal('product','Canvas Backpack','Amazon','$612','12','88')"><td><b>Canvas Backpack</b></td><td>Amazon</td><td>$612</td><td>12</td><td style="color:var(--warn)">88</td><td><span class="md dn">-41%</span></td><td><button class="act di" onclick="event.stopPropagation();doAction(this,'Discount activated')">Discount</button></td></tr>
+<tr onclick="showModal('product','Silk Pillowcase','Shopify','$380','6','142')"><td><b>Silk Pillowcase</b></td><td>Shopify</td><td>$380</td><td>6</td><td style="color:var(--bad)">142</td><td><span class="md dn">-67%</span></td><td><button class="act di" onclick="event.stopPropagation();doAction(this,'20% off activated')">20% off</button></td></tr>
+<tr onclick="showModal('product','Bamboo Board','TikTok','$290','8','61')"><td><b>Bamboo Board</b></td><td>TikTok</td><td>$290</td><td>8</td><td>61</td><td><span class="md dn">-28%</span></td><td><button class="act di" onclick="event.stopPropagation();doAction(this,'Discount activated')">Discount</button></td></tr>
+</tbody></table>
+</div>
+
+<!-- CUSTOMERS -->
+<div class="page" id="pg-customers">
+<div class="pt">Customers</div>
+<div class="ps">5,689 active customers. Click any row for details.</div>
+<table class="tbl"><thead><tr><th>Customer</th><th>Email</th><th>Orders</th><th>LTV</th><th>Platform</th><th>Last order</th><th>Status</th></tr></thead>
+<tbody>
+<tr onclick="showModal('customer','Emma Johnson','emma.j@mail.com','22','$3,180','Shopify','Apr 20')"><td><b>Emma Johnson</b></td><td>emma.j@mail.com</td><td>22</td><td>$3,180</td><td>Shopify</td><td>Apr 20</td><td><span class="status live">Active</span></td></tr>
+<tr onclick="showModal('customer','Maria Santos','msantos@outlook.com','15','$2,340','Shopify','Apr 12')"><td><b>Maria Santos</b></td><td>msantos@outlook.com</td><td>15</td><td>$2,340</td><td>Shopify</td><td>Apr 12</td><td><span class="status live">Active</span></td></tr>
+<tr onclick="showModal('customer','Sarah Chen','sarah.c@gmail.com','12','$1,840','Shopify','Apr 18')"><td><b>Sarah Chen</b></td><td>sarah.c@gmail.com</td><td>12</td><td>$1,840</td><td>Shopify</td><td>Apr 18</td><td><span class="status live">Active</span></td></tr>
+<tr onclick="showModal('customer','James Okafor','j.okafor@yahoo.com','8','$960','Amazon','Apr 15')"><td><b>James Okafor</b></td><td>j.okafor@yahoo.com</td><td>8</td><td>$960</td><td>Amazon</td><td>Apr 15</td><td><span class="status live">Active</span></td></tr>
+<tr onclick="showModal('customer','Chidi Eze','chidi@email.ng','4','$340','TikTok','Apr 10')"><td><b>Chidi Eze</b></td><td>chidi@email.ng</td><td>4</td><td>$340</td><td>TikTok</td><td>Apr 10</td><td><span class="status live">Active</span></td></tr>
+<tr onclick="showModal('customer','Aisha Mohammed','aisha.m@gmail.com','3','$280','TikTok','Mar 28')"><td><b>Aisha Mohammed</b></td><td>aisha.m@gmail.com</td><td>3</td><td>$280</td><td>TikTok</td><td>Mar 28</td><td><span class="status off">Inactive</span></td></tr>
+<tr onclick="showModal('customer','David Kim','dkim@email.com','6','$720','Amazon','Feb 14')"><td><b>David Kim</b></td><td>dkim@email.com</td><td>6</td><td>$720</td><td>Amazon</td><td>Feb 14</td><td><span class="status off">Inactive</span></td></tr>
+</tbody></table>
+</div>
+
+<!-- REPORTS -->
+<div class="page" id="pg-reports">
+<div class="pt">Reports</div>
+<div class="ps">Saved and scheduled reports.</div>
+<table class="tbl"><thead><tr><th>Report</th><th>Type</th><th>Last run</th><th>Schedule</th><th>Action</th></tr></thead>
+<tbody>
+<tr onclick="showModal('report','Weekly revenue summary')"><td><b>Weekly revenue summary</b></td><td>Revenue</td><td>Apr 14</td><td>Every Monday</td><td><button class="act re" onclick="event.stopPropagation();runReport(this)">Run now</button></td></tr>
+<tr onclick="showModal('report','Monthly product performance')"><td><b>Monthly product performance</b></td><td>Products</td><td>Apr 1</td><td>1st of month</td><td><button class="act re" onclick="event.stopPropagation();runReport(this)">Run now</button></td></tr>
+<tr onclick="showModal('report','Customer retention report')"><td><b>Customer retention report</b></td><td>Customers</td><td>Mar 30</td><td>Bi-weekly</td><td><button class="act re" onclick="event.stopPropagation();runReport(this)">Run now</button></td></tr>
+<tr onclick="showModal('report','Platform comparison')"><td><b>Platform comparison</b></td><td>Multi-platform</td><td>Apr 10</td><td>Weekly</td><td><button class="act re" onclick="event.stopPropagation();runReport(this)">Run now</button></td></tr>
+</tbody></table>
+</div>
+
+<!-- CONNECTIONS -->
+<div class="page" id="pg-connections">
+<div class="pt">Connections</div>
+<div class="ps">Connect any platform. Sell anywhere, track everything.</div>
+<div class="sec-label">Your connected stores</div>
+<table class="tbl" style="margin-bottom:24px"><thead><tr><th>Platform</th><th>Store</th><th>Status</th><th>Last sync</th><th>Action</th></tr></thead>
+<tbody>
+<tr><td><b>Shopify</b></td><td>Punsky's Boutique</td><td><span class="status live">Live</span></td><td>2 min ago</td><td><button class="sg-btn" onclick="showModal('manage','Shopify','Punsky\'s Boutique')">Manage</button></td></tr>
+<tr><td><b>Amazon</b></td><td>Punsky's FBA</td><td><span class="status live">Live</span></td><td>5 min ago</td><td><button class="sg-btn" onclick="showModal('manage','Amazon','Punsky\'s FBA')">Manage</button></td></tr>
+<tr><td><b>TikTok Shop</b></td><td>@punskys</td><td><span class="status live">Live</span></td><td>8 min ago</td><td><button class="sg-btn" onclick="showModal('manage','TikTok Shop','@punskys')">Manage</button></td></tr>
+</tbody></table>
+<div class="sec-label">Available platforms</div>
+<div class="conn-grid">
+<div class="cc"><div class="cc-i" style="background:#96bf48">S</div><div class="cc-inf"><div class="cc-n">Shopify</div><div class="cc-rg">Global</div></div><span class="cc-st on">Connected</span></div>
+<div class="cc"><div class="cc-i" style="background:#ff9900">a</div><div class="cc-inf"><div class="cc-n">Amazon</div><div class="cc-rg">Global</div></div><span class="cc-st on">Connected</span></div>
+<div class="cc"><div class="cc-i" style="background:#010101">T</div><div class="cc-inf"><div class="cc-n">TikTok Shop</div><div class="cc-rg">Global</div></div><span class="cc-st on">Connected</span></div>
+<div class="cc" onclick="showModal('connect','Etsy')"><div class="cc-i" style="background:#f56400">E</div><div class="cc-inf"><div class="cc-n">Etsy</div><div class="cc-rg">Global</div></div><span class="cc-add">+ Add</span></div>
+<div class="cc" onclick="showModal('connect','WooCommerce')"><div class="cc-i" style="background:#7b5ea7">W</div><div class="cc-inf"><div class="cc-n">WooCommerce</div><div class="cc-rg">Global</div></div><span class="cc-add">+ Add</span></div>
+<div class="cc" onclick="showModal('connect','Alibaba')"><div class="cc-i" style="background:#e43225">A</div><div class="cc-inf"><div class="cc-n">Alibaba</div><div class="cc-rg">China</div></div><span class="cc-add">+ Add</span></div>
+<div class="cc" onclick="showModal('connect','Jumia')"><div class="cc-i" style="background:#f68b1e">J</div><div class="cc-inf"><div class="cc-n">Jumia</div><div class="cc-rg">Africa</div></div><span class="cc-add">+ Add</span></div>
+<div class="cc" onclick="showModal('connect','Mercado Libre')"><div class="cc-i" style="background:#00a650">M</div><div class="cc-inf"><div class="cc-n">Mercado Libre</div><div class="cc-rg">Latin America</div></div><span class="cc-add">+ Add</span></div>
+<div class="cc" onclick="showModal('connect','Shopee')"><div class="cc-i" style="background:#ee4d2d">S</div><div class="cc-inf"><div class="cc-n">Shopee</div><div class="cc-rg">SE Asia</div></div><span class="cc-add">+ Add</span></div>
+<div class="cc" onclick="showModal('connect','Takealot')"><div class="cc-i" style="background:#ff6a00">T</div><div class="cc-inf"><div class="cc-n">Takealot</div><div class="cc-rg">South Africa</div></div><span class="cc-add">+ Add</span></div>
+<div class="cc" onclick="showModal('connect','Rakuten')"><div class="cc-i" style="background:#e60023">R</div><div class="cc-inf"><div class="cc-n">Rakuten</div><div class="cc-rg">Japan</div></div><span class="cc-add">+ Add</span></div>
+<div class="cc" onclick="showModal('connect','Flipkart')"><div class="cc-i" style="background:#2088ff">F</div><div class="cc-inf"><div class="cc-n">Flipkart</div><div class="cc-rg">India</div></div><span class="cc-add">+ Add</span></div>
+<div class="cc" onclick="showModal('connect','Noon')"><div class="cc-i" style="background:#0db14b">N</div><div class="cc-inf"><div class="cc-n">Noon</div><div class="cc-rg">Middle East</div></div><span class="cc-add">+ Add</span></div>
+<div class="cc" onclick="showModal('connect','eBay')"><div class="cc-i" style="background:#0654ba">e</div><div class="cc-inf"><div class="cc-n">eBay</div><div class="cc-rg">Global</div></div><span class="cc-add">+ Add</span></div>
+<div class="cc" onclick="showModal('connect','Walmart')"><div class="cc-i" style="background:#333">W</div><div class="cc-inf"><div class="cc-n">Walmart</div><div class="cc-rg">USA</div></div><span class="cc-add">+ Add</span></div>
+<div class="cc" onclick="showModal('connect','Coupang')"><div class="cc-i" style="background:#1428a0">C</div><div class="cc-inf"><div class="cc-n">Coupang</div><div class="cc-rg">South Korea</div></div><span class="cc-add">+ Add</span></div>
+</div>
+<div class="dashed-add" onclick="showModal('customStore')"><div style="font-size:28px;color:var(--brand);margin-bottom:6px">+</div><div style="font-size:13px;font-weight:600;margin-bottom:4px">Add custom store</div><div style="font-size:11px;color:var(--ink3)">Local business, custom website, or unlisted platform</div></div>
+</div>
+
+<!-- BILLING -->
+<div class="page" id="pg-billing">
+<div class="pt">Billing</div><div class="ps">Your plan, usage, and payment history.</div>
+<div class="plan-card"><div><div class="pn">Pro plan</div><div class="pp">$99/month &middot; unlimited questions</div></div><button class="plan-btn" onclick="showModal('upgrade')">Upgrade to Enterprise</button></div>
+<div class="sg"><div class="sg-h">Usage this month</div><div class="sg-r"><div class="sl">Questions asked</div><div class="sv">974</div></div><div class="sg-r"><div class="sl">Stores connected</div><div class="sv">3 of unlimited</div></div><div class="sg-r"><div class="sl">Days left</div><div class="sv">12</div></div></div>
+<div class="sg"><div class="sg-h">Payment history</div><div class="sg-r"><div class="sl">Apr 1, 2026</div><div class="sv">$99.00 <button class="sg-btn" onclick="toast('Invoice downloaded','success')">Download</button></div></div><div class="sg-r"><div class="sl">Mar 1, 2026</div><div class="sv">$99.00 <button class="sg-btn" onclick="toast('Invoice downloaded','success')">Download</button></div></div><div class="sg-r"><div class="sl">Feb 1, 2026</div><div class="sv">$99.00 <button class="sg-btn" onclick="toast('Invoice downloaded','success')">Download</button></div></div></div>
+<div class="sg"><div class="sg-h">Payment method</div><div class="sg-r"><div class="sl">Visa ending in 4242</div><div class="sv"><button class="sg-btn" onclick="showModal('payment')">Update</button></div></div></div>
+</div>
+
+<!-- SETTINGS -->
+<div class="page" id="pg-settings">
+<div class="pt">Settings</div><div class="ps">Manage your account, team, and preferences.</div>
+<div class="sg"><div class="sg-h">Profile</div>
+<div class="sg-r"><div class="sl">Name</div><div class="sv" id="f-name">Victor Epuna <button class="sg-btn" onclick="editField('f-name','Victor Epuna')">Edit</button></div></div>
+<div class="sg-r"><div class="sl">Email</div><div class="sv" id="f-email">victor.epuna@gmail.com <button class="sg-btn" onclick="editField('f-email','victor.epuna@gmail.com')">Edit</button></div></div>
+<div class="sg-r"><div class="sl">Password</div><div class="sv"><button class="sg-btn" onclick="showModal('password')">Change password</button></div></div></div>
+<div class="sg"><div class="sg-h">Team</div>
+<div class="sg-r"><div class="sl">Victor Epuna</div><div class="sv">Owner</div></div>
+<div class="sg-r"><div class="sl"><button class="sg-btn" onclick="showModal('invite')">+ Invite team member</button></div><div class="sv"></div></div></div>
+<div class="sg"><div class="sg-h">Notifications</div>
+<div class="sg-r"><div class="sl">Email notifications</div><div class="sv"><button class="toggle-sw on" onclick="toggleSw(this,'Email notifications')"></button></div></div>
+<div class="sg-r"><div class="sl">Weekly digest</div><div class="sv"><button class="toggle-sw on" onclick="toggleSw(this,'Weekly digest')"></button></div></div>
+<div class="sg-r"><div class="sl">Issue alerts</div><div class="sv"><button class="toggle-sw on" onclick="toggleSw(this,'Issue alerts')"></button></div></div></div>
+<div class="sg"><div class="sg-h" style="color:var(--bad)">Danger zone</div>
+<div class="sg-r"><div class="sl">Delete account and all data</div><div class="sv"><button class="sg-btn" style="color:var(--bad);border-color:var(--bad)" onclick="showModal('delete')">Delete account</button></div></div></div>
+</div>
+
+</section>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+/* === NAV === */
+function go(p){
+document.querySelectorAll('.page').forEach(function(e){e.classList.remove('active')});
+document.getElementById('pg-'+p).classList.add('active');
+document.querySelectorAll('.ni').forEach(function(n){n.classList.remove('on')});
+var n=document.querySelector('.ni[data-page="'+p+'"]');
+if(n)n.classList.add('on');
+document.title='clariq — '+p.charAt(0).toUpperCase()+p.slice(1);
+window.scrollTo(0,0);
+if(p==='home'&&!window.chartDone)mkChart();
+}
+
+/* === TOAST with optional undo === */
+var toastTimer;var toastCommitTimer;
+function toast(msg,type){
+clearTimeout(toastTimer);clearTimeout(toastCommitTimer);
+var t=document.getElementById('toast');
+var icon=type==='success'?'&#10003;':type==='error'?'&#10007;':'&#8505;';
+t.innerHTML='<span class="t-icon">'+icon+'</span><span class="t-msg">'+msg+'</span><span class="t-close" onclick="hideToast()">&times;</span>';
+t.className='toast'+(type?' '+type:'')+' show';
+toastTimer=setTimeout(hideToast,3000);
+}
+function toastUndo(msg,commitFn,undoFn){
+clearTimeout(toastTimer);clearTimeout(toastCommitTimer);
+var t=document.getElementById('toast');
+t.innerHTML='<span class="t-icon">&#10003;</span><span class="t-msg">'+msg+'</span><button class="t-undo" onclick="undoAction()">Undo</button><span class="t-close" onclick="commitNow()">&times;</span>';
+t.className='toast success show';
+window._undoFn=undoFn;
+window._commitFn=commitFn;
+toastCommitTimer=setTimeout(function(){commitNow()},4000);
+}
+function undoAction(){
+clearTimeout(toastCommitTimer);
+if(window._undoFn)window._undoFn();
+window._undoFn=null;window._commitFn=null;
+var t=document.getElementById('toast');
+t.innerHTML='<span class="t-icon">&#8617;</span><span class="t-msg">Action undone</span><span class="t-close" onclick="hideToast()">&times;</span>';
+t.className='toast show';
+toastTimer=setTimeout(hideToast,2000);
+}
+function commitNow(){
+clearTimeout(toastCommitTimer);
+if(window._commitFn)window._commitFn();
+window._undoFn=null;window._commitFn=null;
+hideToast();
+}
+function hideToast(){document.getElementById('toast').classList.remove('show')}
+
+/* === ISSUES — single source of truth === */
+function fixIssue(num,msg){
+var all=document.querySelectorAll('[data-issue="'+num+'"]');
+all.forEach(function(el){
+el.style.transition='all .3s ease';
+el.style.opacity='.3';
+el.style.transform='translateX(20px)';
+el.querySelector('.ib').disabled=true;
+});
+toastUndo(msg,function(){
+all.forEach(function(el){el.remove()});syncIssueCount();
+},function(){
+all.forEach(function(el){
+el.style.opacity='1';el.style.transform='translateX(0)';
+el.querySelector('.ib').disabled=false;
+});
+});
+}
+function syncIssueCount(){
+var remaining=document.querySelectorAll('#issuesList .iss').length;
+var badge=document.getElementById('issueBadge');
+var homeCount=document.getElementById('homeIssueCount');
+if(badge){badge.textContent=remaining;if(remaining===0)badge.style.display='none'}
+if(homeCount){homeCount.textContent=remaining;if(remaining===0){homeCount.classList.add('clear')}}
+if(remaining===0){
+var il=document.getElementById('issuesList');
+if(il&&!il.querySelector('.all-clear')){il.innerHTML='<div class="all-clear"><div class="check">&#10003;</div>All issues resolved. You\'re all clear.</div>'}
+var hi=document.getElementById('homeIssues');
+if(hi&&hi.querySelectorAll('.iss').length===0&&!hi.querySelector('.all-clear')){
+var d=document.createElement('div');d.className='all-clear';d.innerHTML='<div class="check">&#10003;</div>All clear.';
+hi.appendChild(d);
+}
+}
+}
+
+/* === ACTION BUTTONS with undo === */
+function doAction(btn,msg){
+if(btn.disabled)return;
+btn.disabled=true;
+var orig=btn.textContent;
+var origClass=btn.className;
+btn.textContent='...';
+setTimeout(function(){
+btn.textContent='Done';
+btn.classList.add('done');
+toastUndo(msg,function(){},function(){
+btn.textContent=orig;
+btn.className=origClass;
+btn.disabled=false;
+});
+},300);
+}
+
+/* === REPORTS === */
+function runReport(btn){
+if(btn.disabled)return;
+btn.disabled=true;
+btn.textContent='Running...';
+btn.style.background='var(--warn)';btn.style.color='#fff';
+setTimeout(function(){
+btn.textContent='Ready';
+btn.style.background='var(--good)';
+toastUndo('Report ready',function(){},function(){
+btn.textContent='Run now';btn.style.background='';btn.style.color='';btn.disabled=false;
+});
+setTimeout(function(){btn.textContent='Run now';btn.style.background='';btn.style.color='';btn.disabled=false},5000);
+},1500);
+}
+
+/* === TOGGLE === */
+function toggleSw(btn,name){
+if(btn.classList.contains('on')){btn.classList.remove('on');btn.classList.add('off');toast(name+' turned off')}
+else{btn.classList.remove('off');btn.classList.add('on');toast(name+' turned on','success')}
+}
+
+/* === EDIT FIELD === */
+function editField(id,val){
+var el=document.getElementById(id);
+el.innerHTML='<input class="sg-edit" value="'+val+'" style="width:200px"/> <button class="sg-btn" onclick="saveField(\''+id+'\')">Save</button> <button class="sg-btn" onclick="cancelField(\''+id+'\',\''+val.replace(/'/g,"\\'")+'\')">Cancel</button>';
+el.querySelector('input').focus();
+el.querySelector('input').addEventListener('keydown',function(e){if(e.key==='Enter')saveField(id);if(e.key==='Escape')cancelField(id,val)});
+}
+function saveField(id){
+var input=document.getElementById(id).querySelector('input');
+var val=input.value.trim();
+if(!val){toast('Field cannot be empty','error');return}
+document.getElementById(id).innerHTML=val+' <button class="sg-btn" onclick="editField(\''+id+'\',\''+val.replace(/'/g,"\\'")+'\')">Edit</button>';
+toast('Saved','success');
+}
+function cancelField(id,val){
+document.getElementById(id).innerHTML=val+' <button class="sg-btn" onclick="editField(\''+id+'\',\''+val.replace(/'/g,"\\'")+'\')">Edit</button>';
+}
+
+/* === MODAL === */
+function showModal(type){
+var c=document.getElementById('modalContent');var a=Array.prototype.slice.call(arguments,1);var h='';
+if(type==='metric'){var m={revenue:{t:'Revenue breakdown',v:'$48,210',d:[['Shopify','$28,400','59%'],['Amazon','$14,200','29%'],['TikTok Shop','$5,610','12%']]},orders:{t:'Orders breakdown',v:'1,284',d:[['Shopify','756','59%'],['Amazon','372','29%'],['TikTok Shop','156','12%']]},avg:{t:'Average order value',v:'$37.54',d:[['Shopify','$42.10','+12%'],['Amazon','$38.20','+3%'],['TikTok Shop','$28.90','-2%']]},returns:{t:'Returns breakdown',v:'3.2%',d:[['Shopify','2.1%','Low'],['Amazon','4.8%','High'],['TikTok Shop','3.4%','Medium']]}};var d=m[a[0]];h='<h3>'+d.t+'</h3><div class="msub">Last 30 days</div><div style="font-size:32px;font-weight:700;margin-bottom:16px">'+d.v+'</div>';d.d.forEach(function(r){h+='<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line);font-size:13px"><span>'+r[0]+'</span><span><b>'+r[1]+'</b> <span style="color:var(--ink3);margin-left:6px">'+r[2]+'</span></span></div>'});h+='<div class="modal-btns"><button class="mbtn cancel" onclick="closeModal()">Close</button></div>'}
+else if(type==='product'){h='<h3>'+a[0]+'</h3><div class="msub">'+a[1]+'</div><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px"><div><div style="font-size:10px;color:var(--ink3)">Revenue</div><div style="font-weight:700;font-size:18px">'+a[2]+'</div></div><div><div style="font-size:10px;color:var(--ink3)">Units sold</div><div style="font-weight:700;font-size:18px">'+a[3]+'</div></div><div><div style="font-size:10px;color:var(--ink3)">In stock</div><div style="font-weight:700;font-size:18px">'+a[4]+'</div></div></div><div class="modal-btns"><button class="mbtn cancel" onclick="closeModal()">Close</button><button class="mbtn primary" onclick="closeModal();toast(\'Reorder placed for '+a[0]+'\',\'success\')">Reorder</button></div>'}
+else if(type==='customer'){h='<h3>'+a[0]+'</h3><div class="msub">'+a[1]+'</div><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px"><div><div style="font-size:10px;color:var(--ink3)">Orders</div><div style="font-weight:700;font-size:18px">'+a[2]+'</div></div><div><div style="font-size:10px;color:var(--ink3)">Lifetime value</div><div style="font-weight:700;font-size:18px">'+a[3]+'</div></div><div><div style="font-size:10px;color:var(--ink3)">Platform</div><div style="font-weight:700;font-size:18px">'+a[4]+'</div></div></div><div style="font-size:12px;color:var(--ink3);margin-bottom:16px">Last order: '+a[5]+'</div><div class="modal-btns"><button class="mbtn cancel" onclick="closeModal()">Close</button><button class="mbtn primary" onclick="closeModal();toast(\'Email sent to '+a[0]+'\',\'success\')">Send email</button></div>'}
+else if(type==='report'){h='<h3>'+a[0]+'</h3><div class="msub">Report details</div><p style="font-size:13px;color:var(--ink2);margin-bottom:16px;line-height:1.6">Analyzes performance data across all connected platforms and generates a PDF summary with key metrics, trends, and recommendations.</p><div class="modal-btns"><button class="mbtn cancel" onclick="closeModal()">Close</button><button class="mbtn primary" onclick="closeModal();toast(\'Running report...\',\'success\')">Run now</button></div>'}
+else if(type==='connect'){h='<h3>Connect '+a[0]+'</h3><div class="msub">Link your '+a[0]+' store to clariq</div><label>Store URL or ID</label><input placeholder="Enter your '+a[0]+' store URL..."/><label>API key (if required)</label><input placeholder="Paste your API key..."/><div class="modal-btns"><button class="mbtn cancel" onclick="closeModal()">Cancel</button><button class="mbtn primary" onclick="closeModal();toast(\''+a[0]+' connected!\',\'success\')">Connect</button></div>'}
+else if(type==='customStore'){h='<h3>Add custom store</h3><div class="msub">Connect any store or platform to clariq</div><label>Store name</label><input placeholder="e.g. My Local Shop"/><label>Platform type</label><select><option>Custom website</option><option>Local business (no website)</option><option>CSV / Excel upload</option><option>API integration</option><option>Other</option></select><label>Website URL (optional)</label><input placeholder="https://mystore.com"/><div class="modal-btns"><button class="mbtn cancel" onclick="closeModal()">Cancel</button><button class="mbtn primary" onclick="closeModal();toast(\'Store added!\',\'success\')">Connect store</button></div>'}
+else if(type==='manage'){h='<h3>Manage '+a[0]+'</h3><div class="msub">'+a[1]+'</div><div style="display:flex;flex-direction:column;gap:0;margin-bottom:16px"><div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--line);font-size:13px"><span style="color:var(--ink3)">Status</span><span style="color:var(--good);font-weight:600">Live</span></div><div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--line);font-size:13px"><span style="color:var(--ink3)">Last sync</span><span>2 min ago</span></div><div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--line);font-size:13px"><span style="color:var(--ink3)">Products</span><span>47</span></div><div style="display:flex;justify-content:space-between;padding:10px 0;font-size:13px"><span style="color:var(--ink3)">Orders</span><span>1,284</span></div></div><div class="modal-btns"><button class="mbtn danger" onclick="if(confirm(\'Disconnect '+a[0]+'? You can reconnect later.\')){closeModal();toast(\''+a[0]+' disconnected\')}">Disconnect</button><button class="mbtn primary" onclick="closeModal();toast(\'Syncing '+a[0]+'...\',\'success\')">Sync now</button></div>'}
+else if(type==='upgrade'){h='<h3>Upgrade to Enterprise</h3><div class="msub">$249/month &middot; everything in Pro plus:</div><ul style="font-size:13px;color:var(--ink2);margin:0 0 16px 16px;line-height:2"><li>Unlimited stores and platforms</li><li>Dedicated account manager</li><li>Custom integrations</li><li>Phone and chat support</li><li>Team access (up to 10 seats)</li></ul><div class="modal-btns"><button class="mbtn cancel" onclick="closeModal()">Maybe later</button><button class="mbtn primary" onclick="closeModal();toast(\'Upgraded to Enterprise!\',\'success\')">Upgrade now &mdash; $249/mo</button></div>'}
+else if(type==='payment'){h='<h3>Update payment method</h3><div class="msub">Enter your new card details</div><label>Card number</label><input placeholder="4242 4242 4242 4242" maxlength="19"/><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><div><label>Expiry</label><input placeholder="MM/YY" maxlength="5"/></div><div><label>CVC</label><input placeholder="123" maxlength="4"/></div></div><div class="modal-btns"><button class="mbtn cancel" onclick="closeModal()">Cancel</button><button class="mbtn primary" onclick="closeModal();toast(\'Payment method updated\',\'success\')">Save card</button></div>'}
+else if(type==='password'){h='<h3>Change password</h3><div class="msub">Enter your current and new password</div><label>Current password</label><input type="password" placeholder="Current password"/><label>New password</label><input type="password" placeholder="New password"/><label>Confirm new password</label><input type="password" placeholder="Confirm"/><div class="modal-btns"><button class="mbtn cancel" onclick="closeModal()">Cancel</button><button class="mbtn primary" onclick="closeModal();toast(\'Password changed\',\'success\')">Update password</button></div>'}
+else if(type==='invite'){h='<h3>Invite team member</h3><div class="msub">They\'ll get access to your clariq dashboard</div><label>Email address</label><input placeholder="teammate@company.com" type="email"/><label>Role</label><select><option>Viewer</option><option>Editor</option><option>Admin</option></select><div class="modal-btns"><button class="mbtn cancel" onclick="closeModal()">Cancel</button><button class="mbtn primary" onclick="closeModal();toast(\'Invitation sent!\',\'success\')">Send invite</button></div>'}
+else if(type==='delete'){h='<h3 style="color:var(--bad)">Delete account</h3><div class="msub">This is permanent and cannot be undone. All data, stores, and history will be deleted.</div><label>Type DELETE to confirm</label><input id="delConfirm" placeholder="DELETE" style="border-color:var(--bad)"/><div class="modal-btns"><button class="mbtn cancel" onclick="closeModal()">Cancel</button><button class="mbtn danger" onclick="if(document.getElementById(\'delConfirm\').value===\'DELETE\'){closeModal();toast(\'Account deleted\',\'error\')}else{toast(\'Type DELETE to confirm\',\'error\')}">Delete forever</button></div>'}
+else if(type==='switchStore'){h='<h3>Switch store</h3><div class="msub">Select which store to view</div><div style="cursor:pointer;padding:10px;border:2px solid var(--brand);border-radius:8px;margin-bottom:8px;display:flex;align-items:center;gap:8px;background:var(--bsoft)" onclick="switchTo(\'punskys\')"><div style="width:24px;height:24px;border-radius:6px;background:#5aa64c;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:600">S</div><div><div style="font-size:12px;font-weight:600">Punsky\'s Boutique</div><div style="font-size:10px;color:var(--ink3)">Shopify + Amazon + TikTok</div></div><span style="margin-left:auto;color:var(--brand);font-size:11px;font-weight:600" id="sw-punskys">Active</span></div><div style="cursor:pointer;padding:10px;border:1px solid var(--line);border-radius:8px;margin-bottom:8px;display:flex;align-items:center;gap:8px" onclick="switchTo(\'all\')"><div style="width:24px;height:24px;border-radius:6px;background:var(--brand);display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:600">A</div><div><div style="font-size:12px;font-weight:600">All Stores</div><div style="font-size:10px;color:var(--ink3)">View all platforms combined</div></div><span style="margin-left:auto;font-size:11px;font-weight:600" id="sw-all"></span></div><div class="modal-btns"><button class="mbtn cancel" onclick="closeModal()">Close</button></div>'}
+c.innerHTML=h;document.getElementById('modalOverlay').classList.add('show');
+}
+function closeModal(){document.getElementById('modalOverlay').classList.remove('show')}
+
+/* === CHART === */
+var chartDone=false;
+function mkChart(){if(chartDone)return;chartDone=true;new Chart(document.getElementById('rvChart'),{type:'line',data:{labels:['Mar 15','','Mar 22','','Mar 29','','Apr 5','','Apr 12','','Apr 18','','Apr 20'],datasets:[{data:[1200,1350,1280,1500,1420,1680,1590,1820,1750,2100,1980,2350,2480],borderColor:'#635bff',backgroundColor:'rgba(99,91,255,.06)',borderWidth:1.5,fill:true,tension:.4,pointRadius:0,pointHoverRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#0a2540',padding:8,cornerRadius:6,titleFont:{size:11},bodyFont:{size:11}}},scales:{x:{grid:{display:false},ticks:{font:{size:9},color:'#8792a2',maxRotation:0}},y:{grid:{color:'rgba(0,0,0,.04)',lineWidth:.5},ticks:{font:{size:9},color:'#8792a2',callback:function(v){return'$'+v.toLocaleString()}},border:{display:false}}}}})}
+mkChart();
+
+/* === ASK === */
+function askQ(q){document.getElementById('askInput').value=q;go('ask');setTimeout(sendMsg,200)}
+function sendMsg(){
+var input=document.getElementById('askInput');var q=input.value.trim();if(!q)return;input.value='';
+var msgs=document.getElementById('askMsgs');
+msgs.innerHTML+='<div class="msg user"><div class="bubble">'+q+'</div><div class="meta">You &middot; just now</div></div>';
+msgs.innerHTML+='<div class="msg bot typing" id="typingMsg"><div class="bubble">Thinking</div></div>';
+msgs.scrollTop=msgs.scrollHeight;
+setTimeout(function(){
+var el=document.getElementById('typingMsg');if(el)el.remove();
+var answers={revenue:'Your total revenue across all stores is <b>$48,210</b> this month, up 23% from last month. Shopify contributed $28,400 (59%), Amazon $14,200 (29%), and TikTok $5,610 (12%).',product:'Top seller: <b>Linen Shirt</b> at $12,480 (312 sold). Worst performer: <b>Silk Pillowcase</b> at $380 (6 sold, 142 sitting in inventory).',customer:'You have <b>5,689 active customers</b>. 47 haven\'t ordered in 60+ days with avg LTV of $340. A win-back campaign could recover ~$16K.',compare:'<b>Shopify</b> leads with 59% of revenue ($28,400). <b>Amazon</b> has 2.3x higher return rate but better avg order ($38.20). <b>TikTok</b> grew 68% this week.',default:'Based on your data: <b>$48,210 revenue</b> this month (+23%). Main concerns: Linen Shirt running low (12 left), Silk Pillowcase stuck (142 units). Amazon returns 2.3x higher than Shopify. Want me to dig deeper into any of these?'};
+var key='default';var ql=q.toLowerCase();
+if(ql.includes('revenue')||ql.includes('money')||ql.includes('made')||ql.includes('total'))key='revenue';
+if(ql.includes('product')||ql.includes('sell')||ql.includes('best')||ql.includes('fast'))key='product';
+if(ql.includes('customer')||ql.includes('who')||ql.includes('top cust'))key='customer';
+if(ql.includes('compare')||ql.includes('vs')||ql.includes('shopify')&&ql.includes('amazon'))key='compare';
+msgs.innerHTML+='<div class="msg bot"><div class="bubble">'+answers[key]+'</div><div class="meta">clariq &middot; just now</div></div>';
+msgs.scrollTop=msgs.scrollHeight;
+},1000);
+}
+
+/* === STORE SWITCHER === */
+function switchTo(store){
+closeModal();
+var sw=document.querySelector('.s-sw');
+var greeting=document.querySelector('#pg-home .pt');
+var cards=document.querySelectorAll('.mc .mv');
+if(store==='all'){
+sw.innerHTML='<div class="dt" style="background:var(--brand)">A</div><div><div class="nm">All Stores</div><div class="sb">3 platforms combined</div></div>';
+greeting.textContent='Evening, Victor';
+cards[0].textContent='$87,632';cards[1].textContent='2,847';cards[2].textContent='$30.78';cards[3].textContent='4.1%';
+toast('Switched to All Stores — showing combined data','success');
+}else{
+sw.innerHTML='<div class="dt" style="background:#5aa64c">S</div><div><div class="nm">Punsky\'s Boutique</div><div class="sb">3 stores connected</div></div>';
+greeting.textContent='Evening, Victor';
+cards[0].textContent='$48,210';cards[1].textContent='1,284';cards[2].textContent='$37.54';cards[3].textContent='3.2%';
+toast('Switched to Punsky\'s Boutique','success');
+}
+go('home');
+}
+
+/* === KEYBOARD === */
+document.addEventListener('keydown',function(e){
+if((e.metaKey||e.ctrlKey)&&e.key==='k'){e.preventDefault();document.getElementById('globalAsk').focus()}
+if(e.key==='Escape')closeModal();
+});
+</script>
+</body>
+</html>
