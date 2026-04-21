@@ -1,9 +1,5 @@
 import snowflake.connector
 import os
-from dotenv import load_dotenv
-
-load_dotenv()
-
 
 def get_connection():
     return snowflake.connector.connect(
