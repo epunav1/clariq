@@ -3,12 +3,11 @@ FastAPI auth routes for CLARIQ
 Handles Google OAuth, email/password auth, and password reset
 """
 
-from fastapi import APIRouter, HTTPException, Header, Depends
+from fastapi import APIRouter, HTTPException, Header
 from pydantic import BaseModel, EmailStr
 import os
 import requests
 from typing import Optional
-from db.auth_db import AuthDB
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
@@ -39,8 +38,10 @@ class AuthResponse(BaseModel):
     user: Optional[dict] = None
     message: str = ""
 
-# Initialize auth DB
-auth_db = AuthDB()
+def get_auth_db():
+    """Lazy load AuthDB to avoid initialization issues"""
+    from db.auth_db import AuthDB
+    return AuthDB()
 
 def get_token_from_header(authorization: Optional[str] = Header(None)) -> str:
     """Extract token from Authorization header"""
@@ -59,47 +60,57 @@ async def signup(request: SignupRequest):
     if len(request.password) < 8:
         raise HTTPException(status_code=400, detail="Password must be at least 8 characters")
     
-    user = auth_db.create_user_email(
-        email=request.email,
-        password=request.password,
-        first_name=request.first_name,
-        last_name=request.last_name
-    )
-    
-    if "error" in user:
-        raise HTTPException(status_code=400, detail=user["error"])
-    
-    session = auth_db.create_session(user["user_id"])
-    
-    if "error" in session:
-        raise HTTPException(status_code=500, detail="Failed to create session")
-    
-    return AuthResponse(
-        success=True,
-        token=session["token"],
-        user=user,
-        message="User created successfully"
-    )
+    try:
+        db = get_auth_db()
+        user = db.create_user_email(
+            email=request.email,
+            password=request.password,
+            first_name=request.first_name,
+            last_name=request.last_name
+        )
+        
+        if "error" in user:
+            raise HTTPException(status_code=400, detail=user["error"])
+        
+        session = db.create_session(user["user_id"])
+        
+        if "error" in session:
+            raise HTTPException(status_code=500, detail="Failed to create session")
+        
+        return AuthResponse(
+            success=True,
+            token=session["token"],
+            user=user,
+            message="User created successfully"
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/login", response_model=AuthResponse)
 async def login(request: LoginRequest):
     """Login with email/password"""
-    user = auth_db.authenticate(request.email, request.password)
-    
-    if not user:
-        raise HTTPException(status_code=401, detail="Invalid email or password")
-    
-    session = auth_db.create_session(user["user_id"])
-    
-    if "error" in session:
-        raise HTTPException(status_code=500, detail="Failed to create session")
-    
-    return AuthResponse(
-        success=True,
-        token=session["token"],
-        user=user,
-        message="Login successful"
-    )
+    try:
+        db = get_auth_db()
+        user = db.authenticate(request.email, request.password)
+        
+        if not user:
+            raise HTTPException(status_code=401, detail="Invalid email or password")
+        
+        session = db.create_session(user["user_id"])
+        
+        if "error" in session:
+            raise HTTPException(status_code=500, detail="Failed to create session")
+        
+        return AuthResponse(
+            success=True,
+            token=session["token"],
+            user=user,
+            message="Login successful"
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/google", response_model=AuthResponse)
 async def google_auth(request: GoogleAuthRequest):
@@ -124,7 +135,8 @@ async def google_auth(request: GoogleAuthRequest):
         first_name = token_data.get("given_name", "")
         last_name = token_data.get("family_name", "")
         
-        user = auth_db.create_user_google(
+        db = get_auth_db()
+        user = db.create_user_google(
             google_id=google_id,
             email=email,
             first_name=first_name,
@@ -134,7 +146,7 @@ async def google_auth(request: GoogleAuthRequest):
         if "error" in user:
             raise HTTPException(status_code=500, detail=user["error"])
         
-        session = auth_db.create_session(user["user_id"])
+        session = db.create_session(user["user_id"])
         
         if "error" in session:
             raise HTTPException(status_code=500, detail="Failed to create session")
@@ -156,80 +168,115 @@ async def google_auth(request: GoogleAuthRequest):
 @router.post("/logout", response_model=AuthResponse)
 async def logout(authorization: Optional[str] = Header(None)):
     """Logout (invalidate session token)"""
-    token = get_token_from_header(authorization)
-    
-    if not token:
-        raise HTTPException(status_code=401, detail="No token provided")
-    
-    success = auth_db.logout(token)
-    
-    if not success:
-        raise HTTPException(status_code=500, detail="Logout failed")
-    
-    return AuthResponse(
-        success=True,
-        message="Logged out successfully"
-    )
+    try:
+        token = get_token_from_header(authorization)
+        
+        if not token:
+            raise HTTPException(status_code=401, detail="No token provided")
+        
+        db = get_auth_db()
+        success = db.logout(token)
+        
+        if not success:
+            raise HTTPException(status_code=500, detail="Logout failed")
+        
+        return AuthResponse(
+            success=True,
+            message="Logged out successfully"
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/password-reset", response_model=AuthResponse)
 async def request_password_reset(request: PasswordResetRequest):
     """Request password reset"""
-    reset_token = auth_db.create_password_reset_token(request.email)
-    
-    if not reset_token:
+    try:
+        db = get_auth_db()
+        reset_token = db.create_password_reset_token(request.email)
+        
+        if not reset_token:
+            return AuthResponse(
+                success=True,
+                message="If email exists, reset token has been sent"
+            )
+        
         return AuthResponse(
             success=True,
-            message="If email exists, reset token has been sent"
+            message="Password reset token created",
+            user={"reset_token": reset_token}
         )
-    
-    return AuthResponse(
-        success=True,
-        message="Password reset token created",
-        user={"reset_token": reset_token}
-    )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/password-reset-confirm", response_model=AuthResponse)
 async def confirm_password_reset(request: PasswordResetConfirm):
     """Confirm password reset with token"""
-    if len(request.new_password) < 8:
-        raise HTTPException(status_code=400, detail="Password must be at least 8 characters")
-    
-    success = auth_db.reset_password(request.reset_token, request.new_password)
-    
-    if not success:
-        raise HTTPException(status_code=400, detail="Invalid or expired reset token")
-    
-    return AuthResponse(
-        success=True,
-        message="Password reset successful"
-    )
+    try:
+        if len(request.new_password) < 8:
+            raise HTTPException(status_code=400, detail="Password must be at least 8 characters")
+        
+        db = get_auth_db()
+        success = db.reset_password(request.reset_token, request.new_password)
+        
+        if not success:
+            raise HTTPException(status_code=400, detail="Invalid or expired reset token")
+        
+        return AuthResponse(
+            success=True,
+            message="Password reset successful"
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/me")
 async def get_current_user(authorization: Optional[str] = Header(None)):
     """Get current user from token"""
-    token = get_token_from_header(authorization)
-    
-    if not token:
-        raise HTTPException(status_code=401, detail="No token provided")
-    
-    payload = auth_db.verify_token(token)
-    
-    if not payload:
-        raise HTTPException(status_code=401, detail="Invalid or expired token")
-    
-    user = auth_db.get_user(payload["user_id"])
-    
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    
-    return {"success": True, "user": user}
+    try:
+        token = get_token_from_header(authorization)
+        
+        if not token:
+            raise HTTPException(status_code=401, detail="No token provided")
+        
+        db = get_auth_db()
+        payload = db.verify_token(token)
+        
+        if not payload:
+            raise HTTPException(status_code=401, detail="Invalid or expired token")
+        
+        user = db.get_user(payload["user_id"])
+        
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        return {"success": True, "user": user}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/verify-token")
 async def verify_token(token: str):
     """Verify if token is still valid"""
-    payload = auth_db.verify_token(token)
-    
-    return {
-        "valid": payload is not None,
-        "user_id": payload.get("user_id") if payload else None
-    }
+    try:
+        db = get_auth_db()
+        payload = db.verify_token(token)
+        
+        return {
+            "valid": payload is not None,
+            "user_id": payload.get("user_id") if payload else None
+        }
+    except Exception as e:
+        return {
+            "valid": False,
+            "user_id": None,
+            "error": str(e)
+        }
+
+@router.get("/health")
+async def auth_health():
+    """Health check for auth service"""
+    return {"status": "auth_service_ready"}
