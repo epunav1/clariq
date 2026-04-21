@@ -1,29 +1,99 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from routes.query import router as query_router
-from routes.connections import router as connections_router
-from routes.upload import router as upload_router
-from routes.auth import router as auth_router
+from pydantic import BaseModel
+import os
+from dotenv import load_dotenv
 
-app = FastAPI(title="CLARIQ API", version="0.3.0")
+# Load environment variables
+load_dotenv()
+
+# Initialize FastAPI app
+app = FastAPI(
+    title="CLARIQ API",
+    description="AI-native universal commerce intelligence platform",
+    version="0.4.0"
+)
+
+# CORS configuration
+origins = [
+    "http://localhost:3000",
+    "http://localhost:5173",
+    "https://tryclariq.netlify.app",
+    "https://tryclariq.com",
+    "https://www.tryclariq.com",
+    "https://beautiful-halva-c6f6b6.netlify.app"
+]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-app.include_router(auth_router)
-app.include_router(query_router)
+# Import routers
+from routes.query import router as query_router
+from routes.connections import router as connections_router
+from routes.upload import router as upload_router
+from routes.auth import router as auth_router
+
+# Mount routers
+app.include_router(query_router, prefix="/api")
 app.include_router(connections_router, prefix="/api")
 app.include_router(upload_router, prefix="/api")
+app.include_router(auth_router, prefix="/api/auth", tags=["auth"])
 
+
+# Health check endpoint
 @app.get("/api/health")
-async def health():
-    return {"api": "healthy", "snowflake": "connected"}
+async def health_check():
+    """Check API and Snowflake connection status."""
+    from db.snowflake_client import SnowflakeClient
+    
+    try:
+        sf = SnowflakeClient()
+        is_connected = sf.test_connection()
+        
+        if is_connected:
+            return {
+                "api": "healthy",
+                "snowflake": "connected"
+            }
+        else:
+            return {
+                "api": "healthy",
+                "snowflake": "disconnected"
+            }
+    except Exception as e:
+        return {
+            "api": "healthy",
+            "snowflake": "error",
+            "error": str(e)
+        }
+
+
+# Root endpoint
+@app.get("/")
+async def root():
+    """Welcome to CLARIQ API."""
+    return {
+        "name": "CLARIQ",
+        "description": "AI-native universal commerce intelligence platform",
+        "version": "0.4.0",
+        "status": "live",
+        "endpoints": {
+            "health": "/api/health",
+            "query": "/api/ask, /api/query",
+            "platforms": "/api/platforms",
+            "connections": "/api/connections",
+            "upload": "/api/upload/*",
+            "auth": "/api/auth/*"
+        }
+    }
+
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    port = int(os.getenv("PORT", 8000))
+    uvicorn.run(app, host="0.0.0.0", port=port)
