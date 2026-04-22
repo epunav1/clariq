@@ -36,14 +36,13 @@ app.add_middleware(
 from routes.query import router as query_router
 from routes.connections import router as connections_router
 from routes.upload import router as upload_router
-from routes.auth import router as auth_router
+# from routes.auth import router as auth_router
 
 # Mount routers
 app.include_router(query_router, prefix="/api")
 app.include_router(connections_router, prefix="/api")
 app.include_router(upload_router, prefix="/api")
-app.include_router(auth_router, prefix="/api/auth", tags=["auth"])
-
+# app.include_router(auth_router, prefix="/api/auth", tags=["auth"])
 
 # Health check endpoint
 @app.get("/api/health")

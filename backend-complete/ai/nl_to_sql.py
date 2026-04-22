@@ -2,9 +2,8 @@ import anthropic
 import os
 from dotenv import load_dotenv
 
-load_dotenv()
-
-client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+# Load environment variables from .env file
+load_dotenv(dotenv_path=os.path.expanduser("~/Downloads/clariq/backend-complete/.env"))
 
 SCHEMA = """
 Tables in CLARIQ_DB.SHOPIFY_RAW:
@@ -28,7 +27,18 @@ RAW_ORDER_LINE_ITEMS: line_item_id (VARCHAR), order_id (VARCHAR),
 """
 
 
+def get_client():
+    """Get Anthropic client with API key from environment."""
+    api_key = os.getenv("ANTHROPIC_API_KEY")
+    if not api_key:
+        raise ValueError("ANTHROPIC_API_KEY not set in environment")
+    return anthropic.Anthropic(api_key=api_key)
+
+
 def question_to_sql(question: str) -> str:
+    """Convert a natural language question to Snowflake SQL."""
+    client = get_client()
+    
     message = client.messages.create(
         model="claude-sonnet-4-6",
         max_tokens=1000,
@@ -67,6 +77,8 @@ Question: {question}"""
 
 def generate_answer(question: str, columns: list, rows: list) -> str:
     """Take raw SQL results and generate a human-readable answer."""
+    client = get_client()
+    
     # Format the data for Claude
     if not rows:
         return "No data found for your question. Try rephrasing or check if your store has data for that time period."
