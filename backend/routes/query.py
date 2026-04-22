@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from ai.nl_to_sql import process_question
-from db.snowflake_client import execute_query
+from ai.nl_to_sql import question_to_sql, generate_answer
+from db.snowflake_client import run_query, test_connection
 
 router = APIRouter()
 
@@ -17,8 +17,26 @@ async def ask_clariq(request: QuestionRequest):
         raise HTTPException(status_code=400, detail="Question cannot be empty")
 
     try:
-        result = process_question(request.question)
-        return result
+        # Convert question to SQL
+        sql = question_to_sql(request.question)
+        
+        # Execute the SQL
+        result = run_query(sql)
+        
+        # Generate human-readable answer
+        answer = generate_answer(
+            request.question,
+            result.get("columns", []),
+            result.get("rows", [])
+        )
+        
+        return {
+            "question": request.question,
+            "answer": answer,
+            "sql": sql,
+            "data": result.get("rows", []),
+            "columns": result.get("columns", [])
+        }
     except Exception as e:
         return {
             "question": request.question,
@@ -34,11 +52,16 @@ async def query_data(request: QuestionRequest):
         raise HTTPException(status_code=400, detail="Question cannot be empty")
 
     try:
-        result = process_question(request.question)
+        # Convert question to SQL
+        sql = question_to_sql(request.question)
+        
+        # Execute the SQL
+        result = run_query(sql)
+        
         return {
-            "question": result.get("question"),
-            "sql": result.get("sql"),
-            "data": result.get("data", []),
+            "question": request.question,
+            "sql": sql,
+            "data": result.get("rows", []),
             "columns": result.get("columns", [])
         }
     except Exception as e:
@@ -50,7 +73,7 @@ async def health_check():
     """Health check endpoint."""
     try:
         # Test Snowflake connection
-        test_result = execute_query("SELECT 1")
+        test_connection()
         return {
             "api": "healthy",
             "snowflake": "connected"
