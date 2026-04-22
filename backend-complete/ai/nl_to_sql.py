@@ -1,9 +1,13 @@
 import anthropic
 import os
-from dotenv import load_dotenv
 
-# Load environment variables from .env file
-load_dotenv(dotenv_path=os.path.expanduser("~/Downloads/clariq/backend-complete/.env"))
+# On Railway, environment variables are already set via the Variables tab
+# On local dev, load from .env file
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except:
+    pass
 
 SCHEMA = """
 Tables in CLARIQ_DB.SHOPIFY_RAW:
