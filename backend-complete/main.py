@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import os
 from dotenv import load_dotenv
+from routes import billing
 
 # Load environment variables
 load_dotenv()
@@ -32,65 +33,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Import routers
-from routes.query import router as query_router
-from routes.connections import router as connections_router
-from routes.upload import router as upload_router
-# from routes.auth import router as auth_router
-
-# Mount routers
-app.include_router(query_router, prefix="/api")
-app.include_router(connections_router, prefix="/api")
-app.include_router(upload_router, prefix="/api")
-# app.include_router(auth_router, prefix="/api/auth", tags=["auth"])
-
-# Health check endpoint
-@app.get("/api/health")
-async def health_check():
-    """Check API and Snowflake connection status."""
-    from db.snowflake_client import SnowflakeClient
-    
-    try:
-        sf = SnowflakeClient()
-        is_connected = sf.test_connection()
-        
-        if is_connected:
-            return {
-                "api": "healthy",
-                "snowflake": "connected"
-            }
-        else:
-            return {
-                "api": "healthy",
-                "snowflake": "disconnected"
-            }
-    except Exception as e:
-        return {
-            "api": "healthy",
-            "snowflake": "error",
-            "error": str(e)
-        }
-
-
-# Root endpoint
-@app.get("/")
-async def root():
-    """Welcome to CLARIQ API."""
-    return {
-        "name": "CLARIQ",
-        "description": "AI-native universal commerce intelligence platform",
-        "version": "0.4.0",
-        "status": "live",
-        "endpoints": {
-            "health": "/api/health",
-            "query": "/api/ask, /api/query",
-            "platforms": "/api/platforms",
-            "connections": "/api/connections",
-            "upload": "/api/upload/*",
-            "auth": "/api/auth/*"
-        }
-    }
-
+# Include routers
+from routes import query, connections, upload, auth
+app.include_router(query.router)
+app.include_router(connections.router)
+app.include_router(upload.router)
+app.include_router(auth.router)
+app.include_router(billing.router)
 
 if __name__ == "__main__":
     import uvicorn
